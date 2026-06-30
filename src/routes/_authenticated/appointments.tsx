@@ -1,0 +1,139 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Calendar, Plus, Trash2, Loader2 } from "lucide-react";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/hooks/use-user";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/_authenticated/appointments")({
+  head: () => ({ meta: [{ title: "Appointments — Cure AI" }] }),
+  component: AppointmentsPage,
+});
+
+function AppointmentsPage() {
+  const { user } = useUser();
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const { data: appts, isLoading } = useQuery({
+    queryKey: ["appointments-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("appointments").select("*").order("appointment_date", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  async function handleAdd(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!user) return;
+    const fd = new FormData(e.currentTarget);
+    setSaving(true);
+    const { error } = await supabase.from("appointments").insert({
+      user_id: user.id,
+      doctor_name: String(fd.get("doctor")),
+      hospital_name: String(fd.get("hospital") ?? ""),
+      appointment_date: String(fd.get("date")),
+      appointment_time: (fd.get("time") as string) || null,
+      notes: String(fd.get("notes") ?? ""),
+      status: "upcoming",
+    });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Appointment added");
+    setOpen(false);
+    qc.invalidateQueries({ queryKey: ["appointments-all"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
+  }
+
+  async function handleDelete(id: string) {
+    const { error } = await supabase.from("appointments").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Removed");
+    qc.invalidateQueries({ queryKey: ["appointments-all"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
+  }
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="font-display text-3xl font-bold">Appointments</h1>
+            <p className="mt-1 text-muted-foreground">Stay on top of every doctor visit.</p>
+          </div>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add appointment</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>New appointment</DialogTitle></DialogHeader>
+              <form onSubmit={handleAdd} className="space-y-4">
+                <div className="space-y-1.5"><Label>Doctor name</Label><Input name="doctor" required /></div>
+                <div className="space-y-1.5"><Label>Hospital / Clinic</Label><Input name="hospital" /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5"><Label>Date</Label><Input name="date" type="date" required /></div>
+                  <div className="space-y-1.5"><Label>Time</Label><Input name="time" type="time" /></div>
+                </div>
+                <div className="space-y-1.5"><Label>Notes</Label><Textarea name="notes" rows={3} /></div>
+                <DialogFooter><Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save</Button></DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {isLoading ? (
+          <div className="grid place-items-center py-16"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+        ) : !appts || appts.length === 0 ? (
+          <EmptyState icon={Calendar} title="No appointments yet" description="Add your first appointment to track upcoming visits." />
+        ) : (
+          <Card className="shadow-soft">
+            <CardHeader><CardTitle className="font-display">All appointments</CardTitle></CardHeader>
+            <CardContent className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Doctor</TableHead>
+                    <TableHead>Hospital</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="w-12" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {appts.map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium">{a.doctor_name}</TableCell>
+                      <TableCell className="text-muted-foreground">{a.hospital_name ?? "—"}</TableCell>
+                      <TableCell>{a.appointment_date}</TableCell>
+                      <TableCell>{a.appointment_time ?? "—"}</TableCell>
+                      <TableCell><Badge variant={a.status === "upcoming" ? "default" : "secondary"}>{a.status}</Badge></TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </DashboardLayout>
+  );
+}
