@@ -114,6 +114,24 @@ function AuthPage() {
     else toast.success("Check your email for a reset link.");
   }
 
+  async function handleGoogle() {
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) throw result.error instanceof Error ? result.error : new Error("Unable to sign in with Google.");
+      if (result.redirected) return;
+      toast.success("Signed in with Google");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Google sign-in failed.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="relative hidden flex-col justify-between gradient-primary p-12 text-primary-foreground lg:flex">
