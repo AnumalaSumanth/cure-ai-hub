@@ -172,7 +172,27 @@ function AuthPage() {
               : "Start organizing your healthcare in minutes."}
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <div className="mt-8 space-y-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="w-full gap-2 bg-white text-slate-900 hover:bg-slate-50"
+              onClick={handleGoogle}
+              disabled={loading}
+            >
+              <GoogleIcon />
+              Continue with Google
+            </Button>
+            <div className="relative py-1">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+              <div className="relative flex justify-center text-xs uppercase tracking-wider">
+                <span className="bg-background px-2 text-muted-foreground">or</span>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             {mode === "signup" && (
               <div className="space-y-1.5">
                 <Label htmlFor="fullName">Full Name</Label>
