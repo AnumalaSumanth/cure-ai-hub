@@ -152,6 +152,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tips: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          tags: string[]
+          target_audience: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          tags?: string[]
+          target_audience?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          tags?: string[]
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

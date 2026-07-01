@@ -17,9 +17,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
+import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
 import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
+import { Route as AuthenticatedHealthTipsNewRouteImport } from './routes/_authenticated/health-tips.new'
+import { Route as AuthenticatedHealthTipsIdRouteImport } from './routes/_authenticated/health-tips.$id'
+import { Route as AuthenticatedHealthTipsIdEditRouteImport } from './routes/_authenticated/health-tips.$id.edit'
 
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
@@ -60,6 +64,11 @@ const AuthenticatedMedicinesRoute = AuthenticatedMedicinesRouteImport.update({
   path: '/medicines',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHealthTipsRoute = AuthenticatedHealthTipsRouteImport.update({
+  id: '/health-tips',
+  path: '/health-tips',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedHealthRecordsRoute =
   AuthenticatedHealthRecordsRouteImport.update({
     id: '/health-records',
@@ -77,6 +86,24 @@ const AuthenticatedAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedHealthTipsNewRoute =
+  AuthenticatedHealthTipsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedHealthTipsRoute,
+  } as any)
+const AuthenticatedHealthTipsIdRoute =
+  AuthenticatedHealthTipsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedHealthTipsRoute,
+  } as any)
+const AuthenticatedHealthTipsIdEditRoute =
+  AuthenticatedHealthTipsIdEditRouteImport.update({
+    id: '/edit',
+    path: '/edit',
+    getParentRoute: () => AuthenticatedHealthTipsIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,9 +113,13 @@ export interface FileRoutesByFullPath {
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
+  '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
+  '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -98,9 +129,13 @@ export interface FileRoutesByTo {
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
+  '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
+  '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -112,9 +147,13 @@ export interface FileRoutesById {
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/_authenticated/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/_authenticated/medicines': typeof AuthenticatedMedicinesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
+  '/_authenticated/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
+  '/_authenticated/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -126,9 +165,13 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/dashboard'
     | '/health-records'
+    | '/health-tips'
     | '/medicines'
     | '/profile'
     | '/settings'
+    | '/health-tips/$id'
+    | '/health-tips/new'
+    | '/health-tips/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -138,9 +181,13 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/dashboard'
     | '/health-records'
+    | '/health-tips'
     | '/medicines'
     | '/profile'
     | '/settings'
+    | '/health-tips/$id'
+    | '/health-tips/new'
+    | '/health-tips/$id/edit'
   id:
     | '__root__'
     | '/'
@@ -151,9 +198,13 @@ export interface FileRouteTypes {
     | '/_authenticated/appointments'
     | '/_authenticated/dashboard'
     | '/_authenticated/health-records'
+    | '/_authenticated/health-tips'
     | '/_authenticated/medicines'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
+    | '/_authenticated/health-tips/$id'
+    | '/_authenticated/health-tips/new'
+    | '/_authenticated/health-tips/$id/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMedicinesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/health-tips': {
+      id: '/_authenticated/health-tips'
+      path: '/health-tips'
+      fullPath: '/health-tips'
+      preLoaderRoute: typeof AuthenticatedHealthTipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/health-records': {
       id: '/_authenticated/health-records'
       path: '/health-records'
@@ -243,13 +301,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppointmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/health-tips/new': {
+      id: '/_authenticated/health-tips/new'
+      path: '/new'
+      fullPath: '/health-tips/new'
+      preLoaderRoute: typeof AuthenticatedHealthTipsNewRouteImport
+      parentRoute: typeof AuthenticatedHealthTipsRoute
+    }
+    '/_authenticated/health-tips/$id': {
+      id: '/_authenticated/health-tips/$id'
+      path: '/$id'
+      fullPath: '/health-tips/$id'
+      preLoaderRoute: typeof AuthenticatedHealthTipsIdRouteImport
+      parentRoute: typeof AuthenticatedHealthTipsRoute
+    }
+    '/_authenticated/health-tips/$id/edit': {
+      id: '/_authenticated/health-tips/$id/edit'
+      path: '/edit'
+      fullPath: '/health-tips/$id/edit'
+      preLoaderRoute: typeof AuthenticatedHealthTipsIdEditRouteImport
+      parentRoute: typeof AuthenticatedHealthTipsIdRoute
+    }
   }
 }
+
+interface AuthenticatedHealthTipsIdRouteChildren {
+  AuthenticatedHealthTipsIdEditRoute: typeof AuthenticatedHealthTipsIdEditRoute
+}
+
+const AuthenticatedHealthTipsIdRouteChildren: AuthenticatedHealthTipsIdRouteChildren =
+  {
+    AuthenticatedHealthTipsIdEditRoute: AuthenticatedHealthTipsIdEditRoute,
+  }
+
+const AuthenticatedHealthTipsIdRouteWithChildren =
+  AuthenticatedHealthTipsIdRoute._addFileChildren(
+    AuthenticatedHealthTipsIdRouteChildren,
+  )
+
+interface AuthenticatedHealthTipsRouteChildren {
+  AuthenticatedHealthTipsIdRoute: typeof AuthenticatedHealthTipsIdRouteWithChildren
+  AuthenticatedHealthTipsNewRoute: typeof AuthenticatedHealthTipsNewRoute
+}
+
+const AuthenticatedHealthTipsRouteChildren: AuthenticatedHealthTipsRouteChildren =
+  {
+    AuthenticatedHealthTipsIdRoute: AuthenticatedHealthTipsIdRouteWithChildren,
+    AuthenticatedHealthTipsNewRoute: AuthenticatedHealthTipsNewRoute,
+  }
+
+const AuthenticatedHealthTipsRouteWithChildren =
+  AuthenticatedHealthTipsRoute._addFileChildren(
+    AuthenticatedHealthTipsRouteChildren,
+  )
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHealthRecordsRoute: typeof AuthenticatedHealthRecordsRoute
+  AuthenticatedHealthTipsRoute: typeof AuthenticatedHealthTipsRouteWithChildren
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -259,6 +369,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHealthRecordsRoute: AuthenticatedHealthRecordsRoute,
+  AuthenticatedHealthTipsRoute: AuthenticatedHealthTipsRouteWithChildren,
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
@@ -277,13 +388,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
