@@ -6,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TipForm, type TipFormValues, type TipStatus } from "@/components/dashboard/TipForm";
 import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
+import { updateTip } from "@/lib/tips-actions";
 
 export const Route = createFileRoute("/_authenticated/health-tips/$id/edit")({
   head: () => ({ meta: [{ title: "Edit Health Tip — Cure AI" }] }),
@@ -17,6 +19,7 @@ function EditTipPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useUser();
 
   const { data: tip, isLoading } = useQuery({
     queryKey: ["tip", id],
@@ -28,15 +31,16 @@ function EditTipPage() {
   });
 
   async function handleUpdate(values: TipFormValues) {
-    const { error } = await supabase.from("tips").update(values).eq("id", id);
-    if (error) {
-      toast.error(error.message);
-      return;
+    if (!user) return;
+    try {
+      await updateTip(id, user.id, values, tip?.content);
+      toast.success("Tip updated");
+      qc.invalidateQueries({ queryKey: ["tips"] });
+      qc.invalidateQueries({ queryKey: ["tip", id] });
+      navigate({ to: "/health-tips/$id", params: { id } });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update");
     }
-    toast.success("Tip updated");
-    qc.invalidateQueries({ queryKey: ["tips"] });
-    qc.invalidateQueries({ queryKey: ["tip", id] });
-    navigate({ to: "/health-tips/$id", params: { id } });
   }
 
   return (
@@ -69,6 +73,7 @@ function EditTipPage() {
                   tags: tip.tags ?? [],
                   status: tip.status as TipStatus,
                   notes: tip.notes ?? "",
+                  is_featured: tip.is_featured ?? false,
                 }}
                 onSubmit={handleUpdate}
                 onCancel={() => navigate({ to: "/health-tips/$id", params: { id } })}

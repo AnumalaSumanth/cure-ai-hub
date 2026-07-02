@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
-import { Loader2 } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Sparkles, Wand2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -12,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { generateTip, improveTip } from "@/lib/tips-ai.functions";
+import { TIP_CATEGORIES } from "@/lib/health-tips-utils";
 
 export type TipStatus = "Draft" | "Published" | "Archived";
 
@@ -23,6 +27,7 @@ export interface TipFormValues {
   tags: string[];
   status: TipStatus;
   notes: string;
+  is_featured: boolean;
 }
 
 interface TipFormProps {
@@ -33,20 +38,60 @@ interface TipFormProps {
 }
 
 export function TipForm({ initial, submitLabel, onSubmit, onCancel }: TipFormProps) {
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [category, setCategory] = useState(initial?.category ?? "");
+  const [content, setContent] = useState(initial?.content ?? "");
+  const [audience, setAudience] = useState(initial?.target_audience ?? "");
+  const [tagsStr, setTagsStr] = useState((initial?.tags ?? []).join(", "));
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [status, setStatus] = useState<TipStatus>(initial?.status ?? "Draft");
+  const [isFeatured, setIsFeatured] = useState(initial?.is_featured ?? false);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [improving, setImproving] = useState(false);
+
+  const generate = useServerFn(generateTip);
+  const improve = useServerFn(improveTip);
+
+  async function handleGenerate() {
+    setGenerating(true);
+    try {
+      const res = await generate({ data: { topic: title || category || undefined } });
+      setTitle(res.title);
+      setCategory(res.category);
+      setContent(res.content);
+      setAudience(res.target_audience);
+      setTagsStr(res.tags.join(", "));
+      toast.success("AI draft ready");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Generation failed");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleImprove() {
+    if (!content.trim()) return toast.error("Add some content first");
+    setImproving(true);
+    try {
+      const res = await improve({ data: { content } });
+      setContent(res.content);
+      toast.success("Content improved");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Improve failed");
+    } finally {
+      setImproving(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const title = String(fd.get("title") ?? "").trim();
-    const content = String(fd.get("content") ?? "").trim();
-    if (!title) return toast.error("Title is required");
+    if (!title.trim()) return toast.error("Title is required");
     if (title.length > 200) return toast.error("Title must be under 200 characters");
-    if (!content) return toast.error("Content is required");
+    if (!content.trim()) return toast.error("Content is required");
     if (content.length > 10000) return toast.error("Content is too long");
 
-    const tags = String(fd.get("tags") ?? "")
+    const tags = tagsStr
       .split(",")
       .map((t) => t.trim())
       .filter(Boolean)
@@ -55,13 +100,14 @@ export function TipForm({ initial, submitLabel, onSubmit, onCancel }: TipFormPro
     setSaving(true);
     try {
       await onSubmit({
-        title,
-        category: String(fd.get("category") ?? "").trim(),
-        content,
-        target_audience: String(fd.get("target_audience") ?? "").trim(),
+        title: title.trim(),
+        category: category.trim(),
+        content: content.trim(),
+        target_audience: audience.trim(),
         tags,
         status,
-        notes: String(fd.get("notes") ?? "").trim(),
+        notes: notes.trim(),
+        is_featured: isFeatured,
       });
     } finally {
       setSaving(false);
@@ -70,22 +116,44 @@ export function TipForm({ initial, submitLabel, onSubmit, onCancel }: TipFormPro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" size="sm" onClick={handleGenerate} disabled={generating}>
+          {generating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+          Generate with AI
+        </Button>
+        <Button type="button" variant="outline" size="sm" onClick={handleImprove} disabled={improving || !content.trim()}>
+          {improving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+          Improve with AI
+        </Button>
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="title">Title *</Label>
-        <Input id="title" name="title" defaultValue={initial?.title ?? ""} required maxLength={200} />
+        <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required maxLength={200} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="category">Category</Label>
-          <Input id="category" name="category" defaultValue={initial?.category ?? ""} placeholder="e.g. Nutrition" />
+          <Input
+            id="category"
+            list="tip-category-suggestions"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="e.g. Nutrition"
+          />
+          <datalist id="tip-category-suggestions">
+            {TIP_CATEGORIES.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="target_audience">Target audience</Label>
           <Input
             id="target_audience"
-            name="target_audience"
-            defaultValue={initial?.target_audience ?? ""}
+            value={audience}
+            onChange={(e) => setAudience(e.target.value)}
             placeholder="e.g. Adults, Diabetics"
           />
         </div>
@@ -93,14 +161,7 @@ export function TipForm({ initial, submitLabel, onSubmit, onCancel }: TipFormPro
 
       <div className="space-y-1.5">
         <Label htmlFor="content">Content *</Label>
-        <Textarea
-          id="content"
-          name="content"
-          defaultValue={initial?.content ?? ""}
-          required
-          rows={8}
-          maxLength={10000}
-        />
+        <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} required rows={10} maxLength={10000} />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -108,8 +169,8 @@ export function TipForm({ initial, submitLabel, onSubmit, onCancel }: TipFormPro
           <Label htmlFor="tags">Tags</Label>
           <Input
             id="tags"
-            name="tags"
-            defaultValue={initial?.tags?.join(", ") ?? ""}
+            value={tagsStr}
+            onChange={(e) => setTagsStr(e.target.value)}
             placeholder="comma, separated, tags"
           />
         </div>
@@ -126,9 +187,20 @@ export function TipForm({ initial, submitLabel, onSubmit, onCancel }: TipFormPro
         </div>
       </div>
 
+      <div className="flex items-center justify-between rounded-lg border border-border p-3">
+        <div className="flex items-center gap-2">
+          <Star className={`h-4 w-4 ${isFeatured ? "fill-warning text-warning" : "text-muted-foreground"}`} />
+          <div>
+            <p className="text-sm font-medium">Feature this tip</p>
+            <p className="text-xs text-muted-foreground">Pin it to the top of your tips list. Only one can be featured at a time.</p>
+          </div>
+        </div>
+        <Switch checked={isFeatured} onCheckedChange={setIsFeatured} />
+      </div>
+
       <div className="space-y-1.5">
         <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" defaultValue={initial?.notes ?? ""} rows={3} maxLength={2000} />
+        <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} maxLength={2000} />
       </div>
 
       <div className="flex justify-end gap-2">

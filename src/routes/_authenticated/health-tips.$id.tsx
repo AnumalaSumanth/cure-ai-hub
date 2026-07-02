@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Loader2, Clock, Star, Copy, Printer } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
+import { readingTimeMinutes } from "@/lib/health-tips-utils";
 
 export const Route = createFileRoute("/_authenticated/health-tips/$id")({
   head: () => ({ meta: [{ title: "Health Tip — Cure AI" }] }),
@@ -28,6 +30,7 @@ function TipDetailPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useUser();
 
   const { data: tip, isLoading, error } = useQuery({
     queryKey: ["tip", id],
@@ -46,10 +49,43 @@ function TipDetailPage() {
     navigate({ to: "/health-tips" });
   }
 
+  async function handleCopy() {
+    if (!tip) return;
+    try {
+      await navigator.clipboard.writeText(`${tip.title}\n\n${tip.content}`);
+      toast.success("Copied to clipboard");
+    } catch {
+      toast.error("Copy failed");
+    }
+  }
+
+  async function handleDuplicate() {
+    if (!tip || !user) return;
+    const { data, error } = await supabase
+      .from("tips")
+      .insert({
+        user_id: user.id,
+        title: `${tip.title} (Copy)`,
+        category: tip.category,
+        content: tip.content,
+        target_audience: tip.target_audience,
+        tags: tip.tags ?? [],
+        status: "Draft",
+        notes: tip.notes,
+        ai_summary: tip.ai_summary,
+      })
+      .select("id")
+      .single();
+    if (error) return toast.error(error.message);
+    toast.success("Tip duplicated");
+    qc.invalidateQueries({ queryKey: ["tips"] });
+    navigate({ to: "/health-tips/$id/edit", params: { id: data.id } });
+  }
+
   return (
     <DashboardLayout>
-      <div className="mx-auto max-w-3xl space-y-6">
-        <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit">
+      <div className="mx-auto max-w-3xl space-y-6 print:max-w-none">
+        <Button asChild variant="ghost" size="sm" className="-ml-2 w-fit print:hidden">
           <Link to="/health-tips"><ArrowLeft className="mr-2 h-4 w-4" /> Back to tips</Link>
         </Button>
 
@@ -62,20 +98,41 @@ function TipDetailPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="shadow-soft">
+          <Card className="shadow-soft print:shadow-none print:border-none">
             <CardHeader className="space-y-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <CardTitle className="font-display text-2xl">{tip.title}</CardTitle>
-                  {tip.category && <p className="mt-1 text-sm text-muted-foreground">{tip.category}</p>}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="font-display text-2xl">{tip.title}</CardTitle>
+                    {tip.is_featured && (
+                      <Badge className="gap-1 bg-warning/15 text-warning hover:bg-warning/15">
+                        <Star className="h-3 w-3 fill-warning" /> Featured
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                    {tip.category && <span>{tip.category}</span>}
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" /> {readingTimeMinutes(tip.content)} min read
+                    </span>
+                  </div>
                 </div>
                 <Badge variant={tip.status === "Published" ? "default" : tip.status === "Archived" ? "outline" : "secondary"}>
                   {tip.status}
                 </Badge>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 print:hidden">
                 <Button asChild size="sm">
                   <Link to="/health-tips/$id/edit" params={{ id }}><Pencil className="mr-2 h-4 w-4" /> Edit</Link>
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleDuplicate}>
+                  <Copy className="mr-2 h-4 w-4" /> Duplicate
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleCopy}>
+                  <Copy className="mr-2 h-4 w-4" /> Copy text
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => window.print()}>
+                  <Printer className="mr-2 h-4 w-4" /> Print
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -97,6 +154,12 @@ function TipDetailPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {tip.ai_summary && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-primary">AI summary</p>
+                  <p className="mt-1 text-sm leading-relaxed">{tip.ai_summary}</p>
+                </div>
+              )}
               {tip.target_audience && (
                 <div>
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Target audience</p>
@@ -118,7 +181,7 @@ function TipDetailPage() {
                 </div>
               )}
               {tip.notes && (
-                <div>
+                <div className="print:hidden">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Notes</p>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{tip.notes}</p>
                 </div>

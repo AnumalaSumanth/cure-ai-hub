@@ -154,10 +154,12 @@ export type Database = {
       }
       tips: {
         Row: {
+          ai_summary: string | null
           category: string | null
           content: string
           created_at: string
           id: string
+          is_featured: boolean
           notes: string | null
           status: string
           tags: string[]
@@ -167,10 +169,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_summary?: string | null
           category?: string | null
           content: string
           created_at?: string
           id?: string
+          is_featured?: boolean
           notes?: string | null
           status?: string
           tags?: string[]
@@ -180,10 +184,12 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_summary?: string | null
           category?: string | null
           content?: string
           created_at?: string
           id?: string
+          is_featured?: boolean
           notes?: string | null
           status?: string
           tags?: string[]
