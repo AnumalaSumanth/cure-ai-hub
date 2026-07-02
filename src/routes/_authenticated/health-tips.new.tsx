@@ -5,9 +5,9 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TipForm, type TipFormValues } from "@/components/dashboard/TipForm";
-import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
+import { createTip } from "@/lib/tips-actions";
 
 export const Route = createFileRoute("/_authenticated/health-tips/new")({
   head: () => ({ meta: [{ title: "New Health Tip — Cure AI" }] }),
@@ -24,17 +24,14 @@ function NewTipPage() {
       toast.error("You must be signed in.");
       return;
     }
-    const { error } = await supabase.from("tips").insert({
-      user_id: user.id,
-      ...values,
-    });
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      await createTip(user.id, values);
+      toast.success("Health tip created");
+      qc.invalidateQueries({ queryKey: ["tips"] });
+      navigate({ to: "/health-tips" });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to create tip");
     }
-    toast.success("Health tip created");
-    qc.invalidateQueries({ queryKey: ["tips"] });
-    navigate({ to: "/health-tips" });
   }
 
   return (
