@@ -106,15 +106,21 @@ function StudyAIPage() {
   const { user } = useUser();
   const qc = useQueryClient();
   const generate = useServerFn(generateStudyPlan);
+  const search = Route.useSearch();
 
-  const [subject, setSubject] = useState("");
-  const [topic, setTopic] = useState("");
+  const [subject, setSubject] = useState(search.subject ?? "");
+  const [topic, setTopic] = useState(search.topic ?? "");
   const [difficulty, setDifficulty] = useState<(typeof DIFFICULTIES)[number]>("Beginner");
   const [dailyHours, setDailyHours] = useState(2);
   const [days, setDays] = useState(7);
   const [examDate, setExamDate] = useState("");
   const [current, setCurrent] = useState<StudyPlanResult | null>(null);
   const [toDelete, setToDelete] = useState<SavedPlan | null>(null);
+
+  useEffect(() => {
+    if (search.subject) setSubject(search.subject);
+    if (search.topic) setTopic(search.topic);
+  }, [search.subject, search.topic]);
 
   const { data: saved, isLoading } = useQuery({
     queryKey: ["study-plans"],
