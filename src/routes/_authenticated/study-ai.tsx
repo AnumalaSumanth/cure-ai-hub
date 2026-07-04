@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -47,6 +48,11 @@ import {
   type StudyPlanResult,
 } from "@/lib/study-plan.functions";
 
+const SearchSchema = z.object({
+  subject: z.string().optional(),
+  topic: z.string().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/study-ai")({
   head: () => ({
     meta: [
@@ -58,6 +64,7 @@ export const Route = createFileRoute("/_authenticated/study-ai")({
       },
     ],
   }),
+  validateSearch: (s) => SearchSchema.parse(s),
   component: StudyAIPage,
 });
 

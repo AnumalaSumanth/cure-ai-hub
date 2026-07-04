@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedStudyAiRouteImport } from './routes/_authenticated/study-ai'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedStudyAiRoute = AuthenticatedStudyAiRouteImport.update({
+  id: '/study-ai',
+  path: '/study-ai',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/study-ai': typeof AuthenticatedStudyAiRoute
   '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
@@ -142,6 +149,7 @@ export interface FileRoutesByTo {
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/study-ai': typeof AuthenticatedStudyAiRoute
   '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
@@ -161,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/medicines': typeof AuthenticatedMedicinesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/study-ai': typeof AuthenticatedStudyAiRoute
   '/_authenticated/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/_authenticated/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/_authenticated/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/medicines'
     | '/profile'
     | '/settings'
+    | '/study-ai'
     | '/health-tips/$id'
     | '/health-tips/new'
     | '/health-tips/$id/edit'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/medicines'
     | '/profile'
     | '/settings'
+    | '/study-ai'
     | '/health-tips/$id'
     | '/health-tips/new'
     | '/health-tips/$id/edit'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/_authenticated/medicines'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
+    | '/_authenticated/study-ai'
     | '/_authenticated/health-tips/$id'
     | '/_authenticated/health-tips/new'
     | '/_authenticated/health-tips/$id/edit'
@@ -264,6 +276,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/study-ai': {
+      id: '/_authenticated/study-ai'
+      path: '/study-ai'
+      fullPath: '/study-ai'
+      preLoaderRoute: typeof AuthenticatedStudyAiRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
@@ -384,6 +403,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStudyAiRoute: typeof AuthenticatedStudyAiRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -395,6 +415,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStudyAiRoute: AuthenticatedStudyAiRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
