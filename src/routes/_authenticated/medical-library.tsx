@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -12,6 +12,7 @@ import {
   FileImage,
   FileArchive,
   File as FileIcon,
+  GraduationCap,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -274,6 +275,14 @@ function MedicalLibraryPage() {
                       )}
                       <Button size="sm" variant="outline" onClick={() => handleDownload(d)}>
                         <Download className="mr-1.5 h-3.5 w-3.5" /> Download
+                      </Button>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link
+                          to="/study-ai"
+                          search={{ subject: d.category ?? "Medical Library", topic: d.file_name.replace(/\.[^.]+$/, "") }}
+                        >
+                          <GraduationCap className="mr-1.5 h-3.5 w-3.5" /> Study plan
+                        </Link>
                       </Button>
                       <Button
                         size="sm"
