@@ -188,6 +188,54 @@ export type Database = {
         }
         Relationships: []
       }
+      study_plans: {
+        Row: {
+          created_at: string
+          daily_hours: number
+          days: number
+          difficulty: string
+          exam_date: string | null
+          id: string
+          plan: Json
+          source_document_id: string | null
+          subject: string
+          tip: string | null
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_hours?: number
+          days?: number
+          difficulty?: string
+          exam_date?: string | null
+          id?: string
+          plan?: Json
+          source_document_id?: string | null
+          subject: string
+          tip?: string | null
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_hours?: number
+          days?: number
+          difficulty?: string
+          exam_date?: string | null
+          id?: string
+          plan?: Json
+          source_document_id?: string | null
+          subject?: string
+          tip?: string | null
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tips: {
         Row: {
           ai_summary: string | null
