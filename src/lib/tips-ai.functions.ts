@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { generateText, Output } from "ai";
+import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -8,10 +8,62 @@ const MODEL = "google/gemini-3-flash-preview";
 const DISCLAIMER =
   "\n\nDisclaimer: This information is educational and does not replace professional medical advice. Consult a qualified healthcare provider for personal guidance.";
 
+const TipSchema = z.object({
+  title: z.string(),
+  category: z.string(),
+  target_audience: z.string(),
+  content: z.string(),
+  tags: z.array(z.string()),
+});
+
+type TipOutput = z.infer<typeof TipSchema>;
+
 function getGateway() {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("Missing LOVABLE_API_KEY");
   return createLovableAiGatewayProvider(key);
+}
+
+function extractJsonObject(text: string): unknown | null {
+  if (!text) return null;
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = (fenced ? fenced[1] : text).trim();
+  const tryParse = (s: string) => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      return null;
+    }
+  };
+  let parsed = tryParse(candidate);
+  if (parsed) return parsed;
+  const first = candidate.indexOf("{");
+  const last = candidate.lastIndexOf("}");
+  if (first !== -1 && last > first) {
+    const slice = candidate.slice(first, last + 1);
+    parsed = tryParse(slice);
+    if (parsed) return parsed;
+    parsed = tryParse(slice.replace(/,\s*([}\]])/g, "$1"));
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function asStringArray(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map((x) => String(x)).filter(Boolean);
+  if (typeof v === "string" && v.trim()) return [v.trim()];
+  return [];
+}
+
+function normalizeTip(raw: unknown): TipOutput {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return {
+    title: String(r.title ?? "Health tip"),
+    category: String(r.category ?? "General Wellness"),
+    target_audience: String(r.target_audience ?? r.audience ?? "General audience"),
+    content: String(r.content ?? r.summary ?? ""),
+    tags: asStringArray(r.tags),
+  };
 }
 
 export const generateTip = createServerFn({ method: "POST" })
@@ -23,21 +75,46 @@ export const generateTip = createServerFn({ method: "POST" })
     const gateway = getGateway();
     const prompt = `Write a professional, medically responsible health tip${
       data.topic ? ` about: ${data.topic}` : ""
-    }. Keep it beginner friendly, easy to understand, non-diagnostic, and well structured. Pick a category from: Nutrition, Exercise, Mental Health, Sleep, Hydration, Diabetes, Heart Health, Women's Health, Children's Health, Senior Care, General Wellness.`;
+    }. Keep it beginner friendly, easy to understand, non-diagnostic, and well structured.
 
-    const { output } = await generateText({
-      model: gateway(MODEL),
-      output: Output.object({
-        schema: z.object({
-          title: z.string(),
-          category: z.string(),
-          target_audience: z.string(),
-          content: z.string(),
-          tags: z.array(z.string()),
-        }),
-      }),
-      prompt,
-    });
+Return ONLY valid JSON (no markdown fences, no prose) matching:
+{ "title": "string", "category": "string", "target_audience": "string", "content": "string", "tags": ["string"] }
+
+Pick "category" from: Nutrition, Exercise, Mental Health, Sleep, Hydration, Diabetes, Heart Health, Women's Health, Children's Health, Senior Care, General Wellness.`;
+
+    let output: TipOutput | null = null;
+    try {
+      const res = await generateText({
+        model: gateway(MODEL),
+        output: Output.object({ schema: TipSchema }),
+        prompt,
+      });
+      output = normalizeTip(res.output);
+    } catch (error) {
+      if (NoObjectGeneratedError.isInstance(error)) {
+        const parsed = extractJsonObject(error.text ?? "");
+        if (parsed) output = normalizeTip(parsed);
+      }
+      if (!output) {
+        try {
+          const { text } = await generateText({
+            model: gateway(MODEL),
+            prompt: prompt + "\n\nRespond with ONLY the JSON object.",
+          });
+          const parsed = extractJsonObject(text);
+          if (parsed) output = normalizeTip(parsed);
+        } catch {
+          // fall through
+        }
+      }
+      if (!output) {
+        throw new Error("The AI response could not be parsed. Please try again.");
+      }
+    }
+
+    if (!output.content.trim()) {
+      throw new Error("The AI did not return any content. Please try again.");
+    }
 
     return {
       ...output,
