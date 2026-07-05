@@ -11,7 +11,7 @@ import {
   Lightbulb,
   Sparkles,
   Star,
-  Clock,
+  
   Activity,
   PencilLine,
   CalendarPlus,
@@ -164,12 +164,9 @@ function DashboardPage() {
   const stats = [
     { label: "Health Tips", value: data?.counts.tips ?? 0, icon: Lightbulb, color: "bg-primary/10 text-primary", to: "/health-tips" },
     { label: "AI-Generated", value: data?.counts.aiGenerated ?? 0, icon: Sparkles, color: "bg-secondary/10 text-secondary", to: "/health-tips" },
-    { label: `Added (${RECENT_DAYS}d)`, value: data?.counts.recentTips ?? 0, icon: Clock, color: "bg-success/10 text-success", to: "/health-tips" },
-    { label: "Featured Tips", value: data?.counts.featured ?? 0, icon: Star, color: "bg-warning/15 text-warning", to: "/health-tips" },
     { label: "Medicines", value: data?.counts.medicines ?? 0, icon: Pill, color: "bg-primary/10 text-primary", to: "/medicines" },
     { label: "Upcoming Appts", value: data?.counts.appointments ?? 0, icon: Calendar, color: "bg-secondary/10 text-secondary", to: "/appointments" },
     { label: "Health Records", value: data?.counts.records ?? 0, icon: FileText, color: "bg-warning/15 text-warning", to: "/health-records" },
-    { label: "Published Tips", value: data?.counts.published ?? 0, icon: Activity, color: "bg-success/10 text-success", to: "/health-tips" },
   ];
 
   return (
@@ -180,9 +177,9 @@ function DashboardPage() {
           <p className="mt-1 text-muted-foreground">Here's a quick look at your health today.</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {isLoading
-            ? Array.from({ length: 8 }).map((_, i) => (
+            ? Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-28 w-full rounded-xl" />
               ))
             : stats.map((s) => (
