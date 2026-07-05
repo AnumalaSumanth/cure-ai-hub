@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { generateText, Output } from "ai";
+import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -24,11 +24,75 @@ const DaySchema = z.object({
   practice: z.string(),
 });
 
+const PlanSchema = z.object({
+  days: z.array(DaySchema),
+  tip: z.string(),
+});
+
 export type StudyPlanDay = z.infer<typeof DaySchema>;
 export type StudyPlanResult = {
   days: StudyPlanDay[];
   tip: string;
 };
+
+function asStringArray(v: unknown): string[] {
+  if (Array.isArray(v)) return v.map((x) => String(x)).filter(Boolean);
+  if (typeof v === "string" && v.trim()) return [v.trim()];
+  return [];
+}
+
+function coerceDay(raw: unknown, index: number): StudyPlanDay {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return {
+    day: Number(r.day) || index + 1,
+    focus: String(r.focus ?? r.title ?? `Day ${index + 1}`),
+    topics: asStringArray(r.topics ?? r.topics_to_study),
+    key_concepts: asStringArray(r.key_concepts ?? r.keyConcepts ?? r.concepts),
+    revision_task: String(r.revision_task ?? r.revision ?? ""),
+    practice: String(r.practice ?? r.practice_questions ?? r.quiz ?? ""),
+  };
+}
+
+function extractJsonObject(text: string): unknown | null {
+  if (!text) return null;
+  // Strip markdown code fences
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const candidate = (fenced ? fenced[1] : text).trim();
+  const tryParse = (s: string) => {
+    try {
+      return JSON.parse(s);
+    } catch {
+      return null;
+    }
+  };
+  let parsed = tryParse(candidate);
+  if (parsed) return parsed;
+  // Find first { ... last }
+  const first = candidate.indexOf("{");
+  const last = candidate.lastIndexOf("}");
+  if (first !== -1 && last > first) {
+    const slice = candidate.slice(first, last + 1);
+    parsed = tryParse(slice);
+    if (parsed) return parsed;
+    // Remove trailing commas
+    const repaired = slice.replace(/,\s*([}\]])/g, "$1");
+    parsed = tryParse(repaired);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function normalize(raw: unknown, requestedDays: number): StudyPlanResult {
+  const obj = (raw ?? {}) as Record<string, unknown>;
+  const daysArr = Array.isArray(obj.days) ? obj.days : [];
+  const days = daysArr
+    .slice(0, requestedDays)
+    .map((d, i) => ({ ...coerceDay(d, i), day: i + 1 }));
+  return {
+    days,
+    tip: String(obj.tip ?? "").trim(),
+  };
+}
 
 export const generateStudyPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -44,7 +108,7 @@ export const generateStudyPlan = createServerFn({ method: "POST" })
 
     const prompt = `You are Curo Study AI, an expert learning assistant for medical and healthcare students.
 
-Generate a structured, personalized study plan.
+Generate a structured, personalized study plan as JSON.
 
 Subject: ${data.subject}
 Topic: ${data.topic}
@@ -53,28 +117,55 @@ Available study time per day: ${data.daily_hours} hours
 Total days: ${data.days}
 ${examLine}
 
+Return ONLY valid JSON matching this shape (no prose, no markdown fences):
+{
+  "days": [
+    { "day": 1, "focus": "string", "topics": ["string"], "key_concepts": ["string"], "revision_task": "string", "practice": "string" }
+  ],
+  "tip": "string"
+}
+
 Rules:
-- Organize output day by day (Day 1, Day 2, ...), exactly ${data.days} days.
-- Each day must contain: topics to study, key concepts to focus on, one revision task, and a practice questions or quiz task.
-- Match depth/pace to difficulty (${data.difficulty}).
-- Keep each day realistic for ${data.daily_hours} hours.
-- Use simple, clear, student-friendly language.
+- Produce exactly ${data.days} day entries.
+- Match depth to difficulty (${data.difficulty}) and keep each day realistic for ${data.daily_hours} hours.
+- Use clear student-friendly language.
 - Do NOT provide medical diagnosis, treatment, or patient-specific clinical advice.
-- End with ONE short revision or exam-preparation tip.`;
+- End with ONE short revision or exam-preparation tip in the "tip" field.`;
 
-    const { output } = await generateText({
-      model: gateway(MODEL),
-      output: Output.object({
-        schema: z.object({
-          days: z.array(DaySchema),
-          tip: z.string(),
-        }),
-      }),
-      prompt,
-    });
-
-    return {
-      days: output.days.slice(0, data.days).map((d, i) => ({ ...d, day: i + 1 })),
-      tip: output.tip.trim(),
-    };
+    try {
+      const { output } = await generateText({
+        model: gateway(MODEL),
+        output: Output.object({ schema: PlanSchema }),
+        prompt,
+      });
+      const normalized = normalize(output, data.days);
+      if (normalized.days.length === 0) throw new Error("empty");
+      return normalized;
+    } catch (error) {
+      // Fallback: parse raw model text when schema validation fails
+      if (NoObjectGeneratedError.isInstance(error)) {
+        const parsed = extractJsonObject(error.text ?? "");
+        if (parsed) {
+          const normalized = normalize(parsed, data.days);
+          if (normalized.days.length > 0) return normalized;
+        }
+      }
+      // Last resort: plain-text generation, then parse
+      try {
+        const { text } = await generateText({
+          model: gateway(MODEL),
+          prompt: prompt + "\n\nRespond with ONLY the JSON object.",
+        });
+        const parsed = extractJsonObject(text);
+        if (parsed) {
+          const normalized = normalize(parsed, data.days);
+          if (normalized.days.length > 0) return normalized;
+        }
+      } catch {
+        // ignore, fall through to friendly error
+      }
+      throw new Error(
+        "The AI response could not be parsed into a study plan. Please try again.",
+      );
+    }
   });
