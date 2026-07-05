@@ -11,7 +11,7 @@ import {
   Lightbulb,
   Sparkles,
   Star,
-  Clock,
+  
   Activity,
   PencilLine,
   CalendarPlus,
