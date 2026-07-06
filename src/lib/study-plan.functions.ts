@@ -1,8 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { getChatModel } from "./ai-provider.server";
+import { withAiFallback } from "./ai-provider.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
 
 
 const InputSchema = z.object({
@@ -143,44 +144,50 @@ Rules:
 - End with ONE short revision or exam-preparation tip in the "tip" field.`;
 
     // Primary path: plain text generation with high token budget, then parse.
-    // Avoids Output.object schema enforcement which fails hard on truncation
-    // or minor shape drift across providers (OpenAI / Gemini).
     try {
-      const { text } = await generateText({
-        model: getChatModel(),
-        prompt: prompt + "\n\nRespond with ONLY the JSON object, no prose, no markdown.",
-        maxOutputTokens: 4000,
+      const parsed = await withAiFallback(async (model) => {
+        const { text } = await generateText({
+          model,
+          prompt: prompt + "\n\nRespond with ONLY the JSON object, no prose, no markdown.",
+          maxOutputTokens: 4000,
+        });
+        const p = extractJsonObject(text);
+        if (!p) throw new Error("parse-failed");
+        return p;
       });
-      const parsed = extractJsonObject(text);
-      if (parsed) {
-        const normalized = normalize(parsed, data.days);
-        if (normalized.days.length > 0) return normalized;
-      }
-    } catch {
-      // fall through
+      const normalized = normalize(parsed, data.days);
+      if (normalized.days.length > 0) return normalized;
+    } catch (err) {
+      console.error("[study-plan] primary text path failed:", (err as Error)?.message);
     }
 
-    // Last-resort: try structured output (some models handle it better).
+    // Last-resort: structured output.
     try {
-      const { output } = await generateText({
-        model: getChatModel(),
-        output: Output.object({ schema: PlanSchema }),
-        prompt,
-      });
-      const normalized = normalize(output, data.days);
-      if (normalized.days.length > 0) return normalized;
-    } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error)) {
-        const parsed = extractJsonObject(error.text ?? "");
-        if (parsed) {
-          const normalized = normalize(parsed, data.days);
-          if (normalized.days.length > 0) return normalized;
+      const parsed = await withAiFallback(async (model) => {
+        try {
+          const { output } = await generateText({
+            model,
+            output: Output.object({ schema: PlanSchema }),
+            prompt,
+          });
+          return output;
+        } catch (error) {
+          if (NoObjectGeneratedError.isInstance(error)) {
+            const p = extractJsonObject(error.text ?? "");
+            if (p) return p;
+          }
+          throw error;
         }
-      }
+      });
+      const normalized = normalize(parsed, data.days);
+      if (normalized.days.length > 0) return normalized;
+    } catch (err) {
+      console.error("[study-plan] structured path failed:", (err as Error)?.message);
     }
 
     throw new Error(
       "The AI response could not be parsed into a study plan. Please try again with fewer days or a narrower topic.",
     );
   });
+
 
