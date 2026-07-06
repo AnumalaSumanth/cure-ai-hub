@@ -127,13 +127,21 @@ export const improveTip = createServerFn({ method: "POST" })
     z.object({ content: z.string().min(1).max(10000) }).parse(input),
   )
   .handler(async ({ data }) => {
-    
-    const { text } = await generateText({
-      model: getChatModel(),
-      prompt: `Rewrite the following health tip to be clearer, more engaging, grammatically correct, and easier to read, without changing its meaning or adding new medical claims. Return only the improved text with no preamble.\n\n---\n${data.content}`,
-    });
-    return { content: text.trim() };
+    try {
+      const text = await withAiFallback(async (model) => {
+        const res = await generateText({
+          model,
+          prompt: `Rewrite the following health tip to be clearer, more engaging, grammatically correct, and easier to read, without changing its meaning or adding new medical claims. Return only the improved text with no preamble.\n\n---\n${data.content}`,
+        });
+        return res.text;
+      });
+      return { content: text.trim() };
+    } catch (err) {
+      console.error("[tips-ai] improveTip failed:", (err as Error)?.message);
+      throw new Error("AI generation failed. Please try again.");
+    }
   });
+
 
 export const summarizeTip = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
