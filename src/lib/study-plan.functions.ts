@@ -1,10 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { getChatModel } from "./ai-provider.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MODEL = "google/gemini-3-flash-preview";
 
 const InputSchema = z.object({
   subject: z.string().min(1).max(200),
@@ -98,9 +97,6 @@ export const generateStudyPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
   .handler(async ({ data }): Promise<StudyPlanResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) throw new Error("Missing LOVABLE_API_KEY");
-    const gateway = createLovableAiGatewayProvider(key);
 
     const examLine = data.exam_date
       ? `Exam date: ${data.exam_date}. Prioritize the most important, high-yield concepts as the exam approaches.`
@@ -134,7 +130,7 @@ Rules:
 
     try {
       const { output } = await generateText({
-        model: gateway(MODEL),
+        model: getChatModel(),
         output: Output.object({ schema: PlanSchema }),
         prompt,
       });
@@ -153,7 +149,7 @@ Rules:
       // Last resort: plain-text generation, then parse
       try {
         const { text } = await generateText({
-          model: gateway(MODEL),
+          model: getChatModel(),
           prompt: prompt + "\n\nRespond with ONLY the JSON object.",
         });
         const parsed = extractJsonObject(text);
