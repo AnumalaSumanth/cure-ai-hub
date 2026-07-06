@@ -149,10 +149,18 @@ export const summarizeTip = createServerFn({ method: "POST" })
     z.object({ content: z.string().min(1).max(10000) }).parse(input),
   )
   .handler(async ({ data }) => {
-    
-    const { text } = await generateText({
-      model: getChatModel(),
-      prompt: `Summarize this health tip in 1-2 short sentences (max 250 characters). Return only the summary text.\n\n---\n${data.content}`,
-    });
-    return { summary: text.trim().slice(0, 300) };
+    try {
+      const text = await withAiFallback(async (model) => {
+        const res = await generateText({
+          model,
+          prompt: `Summarize this health tip in 1-2 short sentences (max 250 characters). Return only the summary text.\n\n---\n${data.content}`,
+        });
+        return res.text;
+      });
+      return { summary: text.trim().slice(0, 300) };
+    } catch (err) {
+      console.error("[tips-ai] summarizeTip failed:", (err as Error)?.message);
+      throw new Error("AI generation failed. Please try again.");
+    }
   });
+
