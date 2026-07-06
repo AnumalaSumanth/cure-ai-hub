@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { getChatModel } from "./ai-provider.server";
+import { withAiFallback } from "./ai-provider.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const DISCLAIMER =
