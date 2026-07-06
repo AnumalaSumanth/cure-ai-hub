@@ -77,33 +77,38 @@ Pick "category" from: Nutrition, Exercise, Mental Health, Sleep, Hydration, Diab
 
     let output: TipOutput | null = null;
     try {
-      const res = await generateText({
-        model: getChatModel(),
-        output: Output.object({ schema: TipSchema }),
-        prompt,
-      });
-      output = normalizeTip(res.output);
-    } catch (error) {
-      if (NoObjectGeneratedError.isInstance(error)) {
-        const parsed = extractJsonObject(error.text ?? "");
-        if (parsed) output = normalizeTip(parsed);
-      }
-      if (!output) {
+      output = await withAiFallback(async (model) => {
         try {
+          const res = await generateText({
+            model,
+            output: Output.object({ schema: TipSchema }),
+            prompt,
+            maxOutputTokens: 2000,
+          });
+          return normalizeTip(res.output);
+        } catch (error) {
+          if (NoObjectGeneratedError.isInstance(error)) {
+            const parsed = extractJsonObject(error.text ?? "");
+            if (parsed) return normalizeTip(parsed);
+          }
+          // Plain-text JSON fallback with same model
           const { text } = await generateText({
-            model: getChatModel(),
+            model,
             prompt: prompt + "\n\nRespond with ONLY the JSON object.",
+            maxOutputTokens: 2000,
           });
           const parsed = extractJsonObject(text);
-          if (parsed) output = normalizeTip(parsed);
-        } catch {
-          // fall through
+          if (parsed) return normalizeTip(parsed);
+          throw error;
         }
-      }
-      if (!output) {
-        throw new Error("The AI response could not be parsed. Please try again.");
-      }
+      });
+    } catch (err) {
+      console.error("[tips-ai] generateTip failed:", (err as Error)?.message);
     }
+    if (!output) {
+      throw new Error("AI generation failed. Please try again.");
+    }
+
 
     if (!output.content.trim()) {
       throw new Error("The AI did not return any content. Please try again.");
