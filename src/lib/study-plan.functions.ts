@@ -54,9 +54,8 @@ function coerceDay(raw: unknown, index: number): StudyPlanDay {
 
 function extractJsonObject(text: string): unknown | null {
   if (!text) return null;
-  // Strip markdown code fences
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-  const candidate = (fenced ? fenced[1] : text).trim();
+  let candidate = (fenced ? fenced[1] : text).trim();
   const tryParse = (s: string) => {
     try {
       return JSON.parse(s);
@@ -66,20 +65,35 @@ function extractJsonObject(text: string): unknown | null {
   };
   let parsed = tryParse(candidate);
   if (parsed) return parsed;
-  // Find first { ... last }
   const first = candidate.indexOf("{");
+  if (first === -1) return null;
+  candidate = candidate.slice(first);
   const last = candidate.lastIndexOf("}");
-  if (first !== -1 && last > first) {
-    const slice = candidate.slice(first, last + 1);
+  if (last > 0) {
+    const slice = candidate.slice(0, last + 1);
     parsed = tryParse(slice);
     if (parsed) return parsed;
-    // Remove trailing commas
-    const repaired = slice.replace(/,\s*([}\]])/g, "$1");
-    parsed = tryParse(repaired);
+    parsed = tryParse(slice.replace(/,\s*([}\]])/g, "$1"));
     if (parsed) return parsed;
   }
-  return null;
+  // Repair truncation: close open brackets/braces
+  let repaired = candidate.replace(/,\s*$/, "").replace(/[\x00-\x1F\x7F]/g, "");
+  // Trim trailing unterminated string
+  const lastQuote = repaired.lastIndexOf('"');
+  const lastComma = Math.max(repaired.lastIndexOf(","), repaired.lastIndexOf("}"), repaired.lastIndexOf("]"));
+  if (lastQuote > lastComma) repaired = repaired.slice(0, lastComma + 1);
+  let openB = 0, openS = 0;
+  for (const c of repaired) {
+    if (c === "{") openB++;
+    else if (c === "}") openB--;
+    else if (c === "[") openS++;
+    else if (c === "]") openS--;
+  }
+  while (openS-- > 0) repaired += "]";
+  while (openB-- > 0) repaired += "}";
+  return tryParse(repaired.replace(/,\s*([}\]])/g, "$1"));
 }
+
 
 function normalize(raw: unknown, requestedDays: number): StudyPlanResult {
   const obj = (raw ?? {}) as Record<string, unknown>;
@@ -128,6 +142,25 @@ Rules:
 - Do NOT provide medical diagnosis, treatment, or patient-specific clinical advice.
 - End with ONE short revision or exam-preparation tip in the "tip" field.`;
 
+    // Primary path: plain text generation with high token budget, then parse.
+    // Avoids Output.object schema enforcement which fails hard on truncation
+    // or minor shape drift across providers (OpenAI / Gemini).
+    try {
+      const { text } = await generateText({
+        model: getChatModel(),
+        prompt: prompt + "\n\nRespond with ONLY the JSON object, no prose, no markdown.",
+        maxOutputTokens: 4000,
+      });
+      const parsed = extractJsonObject(text);
+      if (parsed) {
+        const normalized = normalize(parsed, data.days);
+        if (normalized.days.length > 0) return normalized;
+      }
+    } catch {
+      // fall through
+    }
+
+    // Last-resort: try structured output (some models handle it better).
     try {
       const { output } = await generateText({
         model: getChatModel(),
@@ -135,10 +168,8 @@ Rules:
         prompt,
       });
       const normalized = normalize(output, data.days);
-      if (normalized.days.length === 0) throw new Error("empty");
-      return normalized;
+      if (normalized.days.length > 0) return normalized;
     } catch (error) {
-      // Fallback: parse raw model text when schema validation fails
       if (NoObjectGeneratedError.isInstance(error)) {
         const parsed = extractJsonObject(error.text ?? "");
         if (parsed) {
@@ -146,22 +177,10 @@ Rules:
           if (normalized.days.length > 0) return normalized;
         }
       }
-      // Last resort: plain-text generation, then parse
-      try {
-        const { text } = await generateText({
-          model: getChatModel(),
-          prompt: prompt + "\n\nRespond with ONLY the JSON object.",
-        });
-        const parsed = extractJsonObject(text);
-        if (parsed) {
-          const normalized = normalize(parsed, data.days);
-          if (normalized.days.length > 0) return normalized;
-        }
-      } catch {
-        // ignore, fall through to friendly error
-      }
-      throw new Error(
-        "The AI response could not be parsed into a study plan. Please try again.",
-      );
     }
+
+    throw new Error(
+      "The AI response could not be parsed into a study plan. Please try again with fewer days or a narrower topic.",
+    );
   });
+
