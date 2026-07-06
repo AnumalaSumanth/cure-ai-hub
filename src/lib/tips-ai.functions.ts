@@ -1,10 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { getChatModel } from "./ai-provider.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const MODEL = "google/gemini-3-flash-preview";
 const DISCLAIMER =
   "\n\nDisclaimer: This information is educational and does not replace professional medical advice. Consult a qualified healthcare provider for personal guidance.";
 
@@ -17,12 +16,6 @@ const TipSchema = z.object({
 });
 
 type TipOutput = z.infer<typeof TipSchema>;
-
-function getGateway() {
-  const key = process.env.LOVABLE_API_KEY;
-  if (!key) throw new Error("Missing LOVABLE_API_KEY");
-  return createLovableAiGatewayProvider(key);
-}
 
 function extractJsonObject(text: string): unknown | null {
   if (!text) return null;
