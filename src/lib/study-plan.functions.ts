@@ -111,11 +111,19 @@ function normalize(raw: unknown, requestedDays: number): StudyPlanResult {
 export const generateStudyPlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => InputSchema.parse(input))
-  .handler(async ({ data }): Promise<StudyPlanResult> => {
+  .handler(async ({ data, context }): Promise<StudyPlanResult> => {
+    const { retrieveContext } = await import("./rag.server");
+    const ragContext = await retrieveContext(
+      context.supabase,
+      context.userId,
+      `${data.subject} ${data.topic}`,
+      5,
+    );
 
     const examLine = data.exam_date
       ? `Exam date: ${data.exam_date}. Prioritize the most important, high-yield concepts as the exam approaches.`
       : "No fixed exam date; aim for solid understanding.";
+
 
     const prompt = `You are Curo Study AI, an expert learning assistant for medical and healthcare students.
 
