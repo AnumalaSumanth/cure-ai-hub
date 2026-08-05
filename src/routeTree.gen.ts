@@ -23,6 +23,7 @@ import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
+import { Route as AuthenticatedHealthTipsIndexRouteImport } from './routes/_authenticated/health-tips.index'
 import { Route as AuthenticatedHealthTipsNewRouteImport } from './routes/_authenticated/health-tips.new'
 import { Route as AuthenticatedHealthTipsIdRouteImport } from './routes/_authenticated/health-tips.$id'
 import { Route as AuthenticatedHealthTipsIdEditRouteImport } from './routes/_authenticated/health-tips.$id.edit'
@@ -99,6 +100,12 @@ const AuthenticatedAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedHealthTipsIndexRoute =
+  AuthenticatedHealthTipsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedHealthTipsRoute,
+  } as any)
 const AuthenticatedHealthTipsNewRoute =
   AuthenticatedHealthTipsNewRouteImport.update({
     id: '/new',
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/study-ai': typeof AuthenticatedStudyAiRoute
   '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
+  '/health-tips/': typeof AuthenticatedHealthTipsIndexRoute
   '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
 }
 export interface FileRoutesByTo {
@@ -144,7 +152,6 @@ export interface FileRoutesByTo {
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
-  '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/study-ai': typeof AuthenticatedStudyAiRoute
   '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
+  '/health-tips': typeof AuthenticatedHealthTipsIndexRoute
   '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
 }
 export interface FileRoutesById {
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated/study-ai': typeof AuthenticatedStudyAiRoute
   '/_authenticated/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/_authenticated/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
+  '/_authenticated/health-tips/': typeof AuthenticatedHealthTipsIndexRoute
   '/_authenticated/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
 }
 export interface FileRouteTypes {
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/study-ai'
     | '/health-tips/$id'
     | '/health-tips/new'
+    | '/health-tips/'
     | '/health-tips/$id/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -202,7 +212,6 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/dashboard'
     | '/health-records'
-    | '/health-tips'
     | '/medical-library'
     | '/medicines'
     | '/profile'
@@ -210,6 +219,7 @@ export interface FileRouteTypes {
     | '/study-ai'
     | '/health-tips/$id'
     | '/health-tips/new'
+    | '/health-tips'
     | '/health-tips/$id/edit'
   id:
     | '__root__'
@@ -229,6 +239,7 @@ export interface FileRouteTypes {
     | '/_authenticated/study-ai'
     | '/_authenticated/health-tips/$id'
     | '/_authenticated/health-tips/new'
+    | '/_authenticated/health-tips/'
     | '/_authenticated/health-tips/$id/edit'
   fileRoutesById: FileRoutesById
 }
@@ -340,6 +351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppointmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/health-tips/': {
+      id: '/_authenticated/health-tips/'
+      path: '/'
+      fullPath: '/health-tips/'
+      preLoaderRoute: typeof AuthenticatedHealthTipsIndexRouteImport
+      parentRoute: typeof AuthenticatedHealthTipsRoute
+    }
     '/_authenticated/health-tips/new': {
       id: '/_authenticated/health-tips/new'
       path: '/new'
@@ -381,12 +399,14 @@ const AuthenticatedHealthTipsIdRouteWithChildren =
 interface AuthenticatedHealthTipsRouteChildren {
   AuthenticatedHealthTipsIdRoute: typeof AuthenticatedHealthTipsIdRouteWithChildren
   AuthenticatedHealthTipsNewRoute: typeof AuthenticatedHealthTipsNewRoute
+  AuthenticatedHealthTipsIndexRoute: typeof AuthenticatedHealthTipsIndexRoute
 }
 
 const AuthenticatedHealthTipsRouteChildren: AuthenticatedHealthTipsRouteChildren =
   {
     AuthenticatedHealthTipsIdRoute: AuthenticatedHealthTipsIdRouteWithChildren,
     AuthenticatedHealthTipsNewRoute: AuthenticatedHealthTipsNewRoute,
+    AuthenticatedHealthTipsIndexRoute: AuthenticatedHealthTipsIndexRoute,
   }
 
 const AuthenticatedHealthTipsRouteWithChildren =
