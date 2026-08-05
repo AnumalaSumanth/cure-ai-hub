@@ -135,6 +135,7 @@ Difficulty: ${data.difficulty}
 Available study time per day: ${data.daily_hours} hours
 Total days: ${data.days}
 ${examLine}
+${ragContext}
 
 Return ONLY valid JSON matching this shape (no prose, no markdown fences):
 {
