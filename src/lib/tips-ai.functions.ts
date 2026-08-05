@@ -64,16 +64,21 @@ export const generateTip = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ topic: z.string().max(500).optional() }).parse(input ?? {}),
   )
-  .handler(async ({ data }) => {
-    
+  .handler(async ({ data, context }) => {
+    const { retrieveContext } = await import("./rag.server");
+    const ragContext = data.topic
+      ? await retrieveContext(context.supabase, context.userId, data.topic, 4)
+      : "";
+
     const prompt = `Write a professional, medically responsible health tip${
       data.topic ? ` about: ${data.topic}` : ""
     }. Keep it beginner friendly, easy to understand, non-diagnostic, and well structured.
-
+${ragContext}
 Return ONLY valid JSON (no markdown fences, no prose) matching:
 { "title": "string", "category": "string", "target_audience": "string", "content": "string", "tags": ["string"] }
 
 Pick "category" from: Nutrition, Exercise, Mental Health, Sleep, Hydration, Diabetes, Heart Health, Women's Health, Children's Health, Senior Care, General Wellness.`;
+
 
     let output: TipOutput | null = null;
     try {
