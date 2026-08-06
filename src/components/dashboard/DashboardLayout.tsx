@@ -13,6 +13,7 @@ import {
   Lightbulb,
   BookOpen,
   GraduationCap,
+  Camera,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ const items = [
   { title: "Health Tips", url: "/health-tips", icon: Lightbulb },
   { title: "Medical Library", url: "/medical-library", icon: BookOpen },
   { title: "Study AI", url: "/study-ai", icon: GraduationCap },
+  { title: "Image Analysis", url: "/image-analysis", icon: Camera },
   { title: "Settings", url: "/settings", icon: Settings },
 ] as const;
 

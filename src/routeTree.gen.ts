@@ -19,6 +19,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
 import { Route as AuthenticatedMedicalLibraryRouteImport } from './routes/_authenticated/medical-library'
+import { Route as AuthenticatedImageAnalysisRouteImport } from './routes/_authenticated/image-analysis'
 import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
 import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -78,6 +79,12 @@ const AuthenticatedMedicalLibraryRoute =
     path: '/medical-library',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedImageAnalysisRoute =
+  AuthenticatedImageAnalysisRouteImport.update({
+    id: '/image-analysis',
+    path: '/image-analysis',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHealthTipsRoute = AuthenticatedHealthTipsRouteImport.update({
   id: '/health-tips',
   path: '/health-tips',
@@ -134,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
   '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
+  '/image-analysis': typeof AuthenticatedImageAnalysisRoute
   '/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -152,6 +160,7 @@ export interface FileRoutesByTo {
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/image-analysis': typeof AuthenticatedImageAnalysisRoute
   '/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -173,6 +182,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/health-records': typeof AuthenticatedHealthRecordsRoute
   '/_authenticated/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
+  '/_authenticated/image-analysis': typeof AuthenticatedImageAnalysisRoute
   '/_authenticated/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/_authenticated/medicines': typeof AuthenticatedMedicinesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/health-records'
     | '/health-tips'
+    | '/image-analysis'
     | '/medical-library'
     | '/medicines'
     | '/profile'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/dashboard'
     | '/health-records'
+    | '/image-analysis'
     | '/medical-library'
     | '/medicines'
     | '/profile'
@@ -232,6 +244,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/health-records'
     | '/_authenticated/health-tips'
+    | '/_authenticated/image-analysis'
     | '/_authenticated/medical-library'
     | '/_authenticated/medicines'
     | '/_authenticated/profile'
@@ -321,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/medical-library'
       fullPath: '/medical-library'
       preLoaderRoute: typeof AuthenticatedMedicalLibraryRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/image-analysis': {
+      id: '/_authenticated/image-analysis'
+      path: '/image-analysis'
+      fullPath: '/image-analysis'
+      preLoaderRoute: typeof AuthenticatedImageAnalysisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/health-tips': {
@@ -419,6 +439,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHealthRecordsRoute: typeof AuthenticatedHealthRecordsRoute
   AuthenticatedHealthTipsRoute: typeof AuthenticatedHealthTipsRouteWithChildren
+  AuthenticatedImageAnalysisRoute: typeof AuthenticatedImageAnalysisRoute
   AuthenticatedMedicalLibraryRoute: typeof AuthenticatedMedicalLibraryRoute
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -431,6 +452,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHealthRecordsRoute: AuthenticatedHealthRecordsRoute,
   AuthenticatedHealthTipsRoute: AuthenticatedHealthTipsRouteWithChildren,
+  AuthenticatedImageAnalysisRoute: AuthenticatedImageAnalysisRoute,
   AuthenticatedMedicalLibraryRoute: AuthenticatedMedicalLibraryRoute,
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
@@ -451,13 +473,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
