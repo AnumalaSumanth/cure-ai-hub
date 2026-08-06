@@ -72,10 +72,6 @@ function Home() {
       <section className="gradient-hero">
         <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              Version 1 · MVP
-            </div>
             <h1 className="mt-6 font-display text-4xl font-bold leading-tight text-foreground sm:text-6xl">
               Smarter Health Starts Here.
             </h1>
