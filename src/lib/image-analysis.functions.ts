@@ -100,7 +100,7 @@ Return ONLY valid JSON (no markdown fences, no prose) matching:
               role: "user",
               content: [
                 { type: "text", text: prompt },
-                { type: "image", image: new URL(data.imageDataUrl) },
+                { type: "image", image: data.imageDataUrl },
               ],
             },
           ],
