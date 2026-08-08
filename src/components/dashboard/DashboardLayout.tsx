@@ -14,6 +14,7 @@ import {
   BookOpen,
   GraduationCap,
   Camera,
+  Bot,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,6 +40,7 @@ import type { ReactNode } from "react";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Cure AI Agent", url: "/agent", icon: Bot },
   { title: "Profile", url: "/profile", icon: UserIcon },
   { title: "Medicines", url: "/medicines", icon: Pill },
   { title: "Appointments", url: "/appointments", icon: Calendar },
