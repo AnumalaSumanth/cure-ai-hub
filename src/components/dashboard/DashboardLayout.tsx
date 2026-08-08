@@ -39,6 +39,7 @@ import type { ReactNode } from "react";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Cure AI Agent", url: "/agent", icon: Bot },
   { title: "Profile", url: "/profile", icon: UserIcon },
   { title: "Medicines", url: "/medicines", icon: Pill },
   { title: "Appointments", url: "/appointments", icon: Calendar },
