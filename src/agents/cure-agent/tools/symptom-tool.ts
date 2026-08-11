@@ -3,6 +3,8 @@ import { generateText } from "ai";
 import { withAiFallback, MEDICAL_SAFETY_SYSTEM } from "@/lib/ai-provider.server";
 import type { AgentTool } from "../types";
 import { AGENT_DISCLAIMER } from "../safety";
+import { memoryContext } from "../memory";
+import { formatTrustedNotes, searchTrustedNotes } from "../knowledge/trusted-sources";
 
 export const symptomTool: AgentTool = {
   name: "symptom_guidance",
@@ -18,12 +20,28 @@ export const symptomTool: AgentTool = {
       .map((m) => `${m.role === "user" ? "User" : "Cure AI"}: ${m.content}`)
       .join("\n");
 
+    const sources: string[] = [];
+    const notes = searchTrustedNotes(symptoms, 2);
+    for (const n of notes) sources.push(n.source);
+
+    let retrieved = "";
+    try {
+      const { retrieveContext } = await import("@/lib/rag.server");
+      retrieved = await retrieveContext(ctx.supabase, ctx.userId, symptoms, 3);
+      if (retrieved) sources.push("Your Medical Library");
+    } catch (err) {
+      console.error("[agent:symptom] retrieval failed", (err as Error)?.message);
+    }
+
     const prompt = `${MEDICAL_SAFETY_SYSTEM}
+
+${ctx.memory ? memoryContext(ctx.memory) : ""}
 
 Conversation so far (use it to resolve references like "it"):
 ${history || "(none)"}
 
 The user describes: ${symptoms}
+${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's Medical Library:${retrieved}` : ""}
 
 Respond in short markdown:
 1. One sentence acknowledging what they described.
@@ -32,7 +50,7 @@ Respond in short markdown:
 4. "See a professional if" — clear warning signs.
 5. Exactly ONE follow-up question that would help a clinician (e.g. duration or severity 1-10), unless the user already answered it.
 
-Never state a diagnosis. Never suggest starting, stopping or changing prescription medication.`;
+Use the retrieved reference material above where relevant. Never state a diagnosis. Never suggest starting, stopping or changing prescription medication.`;
 
     try {
       const text = await withAiFallback(async (model) => {
@@ -40,7 +58,12 @@ Never state a diagnosis. Never suggest starting, stopping or changing prescripti
         return res.text.trim();
       });
       if (!text) throw new Error("empty");
-      return { ok: true, content: text, needsClarification: /\?\s*$/.test(text) };
+      return {
+        ok: true,
+        content: text,
+        needsClarification: /\?\s*$/.test(text),
+        sources: [...new Set(sources)],
+      };
     } catch (err) {
       console.error("[agent:symptom_guidance]", (err as Error)?.message);
       return {
