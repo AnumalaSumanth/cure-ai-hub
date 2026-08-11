@@ -52,7 +52,9 @@ const CONFIDENCE_LABEL = { low: "Low", moderate: "Moderate", high: "High" } as c
 
 function AgentPage() {
   const ask = useServerFn(askHealthAgent);
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activity, setActivity] = useState<AgentActivityEntry[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -65,23 +67,40 @@ function AgentPage() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
 
-  async function send(text: string) {
+  async function send(text: string, confirm?: PendingAction) {
     const message = text.trim();
     if (!message || status) return;
     const history = messages.map((m) => ({ role: m.role, content: m.content }));
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    if (!confirm) setMessages((prev) => [...prev, { role: "user", content: message }]);
     setInput("");
     setStatus("Understanding your request...");
     try {
-      const res = await ask({ data: { message, history: history.slice(-10) } });
+      const res = await ask({
+        data: {
+          message,
+          history: history.slice(-10),
+          ...(confirm
+            ? { confirm: { tool: confirm.tool, confirmed: true, args: confirm.args } }
+            : {}),
+        },
+      });
+      setActivity(res.activity);
       setMessages((prev) => [
-        ...prev,
+        ...prev.map((m) => (m.pendingAction ? { ...m, pendingAction: null } : m)),
         {
           role: "assistant",
           content: res.message,
-          meta: { safety: res.safety, sources: res.sources, disclaimer: res.disclaimer },
+          meta: {
+            safety: res.safety,
+            risk: res.risk,
+            confidence: res.confidence,
+            sources: res.sources,
+            disclaimer: res.disclaimer,
+          },
+          pendingAction: res.pendingAction,
         },
       ]);
+      if (confirm) void queryClient.invalidateQueries({ queryKey: ["agent-action-center"] });
     } catch (err) {
       console.error(err);
       setMessages((prev) => [
@@ -93,6 +112,7 @@ function AgentPage() {
       inputRef.current?.focus();
     }
   }
+
 
   return (
     <DashboardLayout>
