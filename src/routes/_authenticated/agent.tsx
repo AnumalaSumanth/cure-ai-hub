@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Send, ShieldAlert, User as UserIcon } from "lucide-react";
+import { Bot, Send, ShieldAlert, ShieldCheck, User as UserIcon } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { AgentActionCenter, AgentActivityLog } from "@/components/dashboard/AgentPanels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { askHealthAgent } from "@/lib/agent.functions";
-import type { AgentResponse } from "@/agents/cure-agent/types";
+import type { AgentActivityEntry, AgentResponse, PendingAction } from "@/agents/cure-agent/types";
 
 export const Route = createFileRoute("/_authenticated/agent")({
   head: () => ({
@@ -34,7 +36,8 @@ export const Route = createFileRoute("/_authenticated/agent")({
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
-  meta?: Pick<AgentResponse, "safety" | "sources" | "disclaimer">;
+  meta?: Pick<AgentResponse, "safety" | "risk" | "confidence" | "sources" | "disclaimer">;
+  pendingAction?: PendingAction | null;
 };
 
 const SUGGESTIONS = [
@@ -43,6 +46,9 @@ const SUGGESTIONS = [
   "Remind me to take Metformin at 9 PM.",
   "Create a study plan for pharmacology.",
 ];
+
+const CONFIDENCE_LABEL = { low: "Low", moderate: "Moderate", high: "High" } as const;
+
 
 function AgentPage() {
   const ask = useServerFn(askHealthAgent);
