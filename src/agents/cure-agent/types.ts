@@ -55,7 +55,7 @@ export type AgentActivityEntry = { at: string; label: string; detail?: string };
 export type PendingAction = {
   tool: string;
   summary: string;
-  args: Record<string, unknown>;
+  args: Record<string, string>;
 };
 
 export type AgentResponse = {
