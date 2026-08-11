@@ -165,16 +165,60 @@ function AgentPage() {
                       <span className="text-xs font-semibold uppercase">Urgent care advised</span>
                     </div>
                   )}
-                  <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
-                  {m.meta?.sources && m.meta.sources.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {m.meta.sources.map((s) => (
-                        <Badge key={s} variant="secondary" className="text-[10px]">
-                          {s}
-                        </Badge>
-                      ))}
+                  {m.meta?.safety !== "urgent" && m.meta?.risk === "high" && (
+                    <div className="flex items-center gap-2 text-destructive">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase">
+                        Safety limit — professional care needed
+                      </span>
                     </div>
                   )}
+                  <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
+
+                  {m.pendingAction && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        disabled={Boolean(status)}
+                        onClick={() => void send(m.pendingAction!.summary, m.pendingAction!)}
+                      >
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setMessages((prev) =>
+                            prev.map((x, xi) => (xi === i ? { ...x, pendingAction: null } : x)),
+                          )
+                        }
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+
+                  {m.role === "assistant" && m.meta && (
+                    <div className="space-y-1 pt-1">
+                      {m.meta.sources.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            Based on
+                          </span>
+                          {m.meta.sources.map((s) => (
+                            <Badge key={s} variant="secondary" className="text-[10px]">
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">
+                        Confidence: {CONFIDENCE_LABEL[m.meta.confidence]} — how well-supported this
+                        answer is, not a medical probability.
+                      </p>
+                    </div>
+                  )}
+
                   {m.role === "assistant" && m.meta?.disclaimer && (
                     <p className="pt-1 text-[11px] text-muted-foreground">{m.meta.disclaimer}</p>
                   )}
@@ -186,6 +230,7 @@ function AgentPage() {
                 )}
               </div>
             ))}
+
 
             {status && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
