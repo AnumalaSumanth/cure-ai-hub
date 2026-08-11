@@ -222,6 +222,12 @@ function AgentPage() {
             <Send className="h-4 w-4" />
           </Button>
         </form>
+        </div>
+
+        <aside className="space-y-4 lg:sticky lg:top-4 lg:h-fit">
+          <AgentActionCenter />
+          <AgentActivityLog entries={activity} />
+        </aside>
       </div>
     </DashboardLayout>
   );
