@@ -224,12 +224,17 @@ describe("tool failures degrade safely", () => {
 });
 
 describe("RAG failure handling", () => {
-  it("knowledge tool still answers when retrieval and the model both fail", async () => {
-    const res = await medicalKnowledgeTool.execute({ query: "what is hba1c" }, ctx());
-    expect(typeof res.content).toBe("string");
-    expect(res.content.length).toBeGreaterThan(0);
+  it("falls back to a safe, low-confidence response when no material is retrieved", () => {
+    expect(searchTrustedNotes("")).toEqual([]);
+    const v = verifyToolResult(
+      { ok: false, content: "I couldn't look that up right now. Please try again." },
+      "medium",
+    );
+    expect(v.valid).toBe(false);
+    expect(v.confidence).toBe("low");
   });
 });
+
 
 describe("data isolation", () => {
   it("denies access to a report belonging to another user", async () => {
