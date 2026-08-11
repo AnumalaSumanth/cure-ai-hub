@@ -116,7 +116,8 @@ function AgentPage() {
 
   return (
     <DashboardLayout>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold">Cure AI Agent</h1>
           <p className="text-sm text-muted-foreground">
