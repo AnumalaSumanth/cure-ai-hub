@@ -1,14 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Bot, Send, ShieldAlert, User as UserIcon } from "lucide-react";
+import { Bot, Send, ShieldAlert, ShieldCheck, User as UserIcon } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { AgentActionCenter, AgentActivityLog } from "@/components/dashboard/AgentPanels";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { askHealthAgent } from "@/lib/agent.functions";
-import type { AgentResponse } from "@/agents/cure-agent/types";
+import type { AgentActivityEntry, AgentResponse, PendingAction } from "@/agents/cure-agent/types";
 
 export const Route = createFileRoute("/_authenticated/agent")({
   head: () => ({
@@ -34,7 +36,8 @@ export const Route = createFileRoute("/_authenticated/agent")({
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
-  meta?: Pick<AgentResponse, "safety" | "sources" | "disclaimer">;
+  meta?: Pick<AgentResponse, "safety" | "risk" | "confidence" | "sources" | "disclaimer">;
+  pendingAction?: PendingAction | null;
 };
 
 const SUGGESTIONS = [
@@ -44,9 +47,14 @@ const SUGGESTIONS = [
   "Create a study plan for pharmacology.",
 ];
 
+const CONFIDENCE_LABEL = { low: "Low", moderate: "Moderate", high: "High" } as const;
+
+
 function AgentPage() {
   const ask = useServerFn(askHealthAgent);
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [activity, setActivity] = useState<AgentActivityEntry[]>([]);
   const [input, setInput] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -59,23 +67,40 @@ function AgentPage() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
 
-  async function send(text: string) {
+  async function send(text: string, confirm?: PendingAction) {
     const message = text.trim();
     if (!message || status) return;
     const history = messages.map((m) => ({ role: m.role, content: m.content }));
-    setMessages((prev) => [...prev, { role: "user", content: message }]);
+    if (!confirm) setMessages((prev) => [...prev, { role: "user", content: message }]);
     setInput("");
     setStatus("Understanding your request...");
     try {
-      const res = await ask({ data: { message, history: history.slice(-10) } });
+      const res = await ask({
+        data: {
+          message,
+          history: history.slice(-10),
+          ...(confirm
+            ? { confirm: { tool: confirm.tool, confirmed: true, args: confirm.args } }
+            : {}),
+        },
+      });
+      setActivity(res.activity);
       setMessages((prev) => [
-        ...prev,
+        ...prev.map((m) => (m.pendingAction ? { ...m, pendingAction: null } : m)),
         {
           role: "assistant",
           content: res.message,
-          meta: { safety: res.safety, sources: res.sources, disclaimer: res.disclaimer },
+          meta: {
+            safety: res.safety,
+            risk: res.risk,
+            confidence: res.confidence,
+            sources: res.sources,
+            disclaimer: res.disclaimer,
+          },
+          pendingAction: res.pendingAction,
         },
       ]);
+      if (confirm) void queryClient.invalidateQueries({ queryKey: ["agent-action-center"] });
     } catch (err) {
       console.error(err);
       setMessages((prev) => [
@@ -88,9 +113,11 @@ function AgentPage() {
     }
   }
 
+
   return (
     <DashboardLayout>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold">Cure AI Agent</h1>
           <p className="text-sm text-muted-foreground">
@@ -138,16 +165,60 @@ function AgentPage() {
                       <span className="text-xs font-semibold uppercase">Urgent care advised</span>
                     </div>
                   )}
-                  <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
-                  {m.meta?.sources && m.meta.sources.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {m.meta.sources.map((s) => (
-                        <Badge key={s} variant="secondary" className="text-[10px]">
-                          {s}
-                        </Badge>
-                      ))}
+                  {m.meta?.safety !== "urgent" && m.meta?.risk === "high" && (
+                    <div className="flex items-center gap-2 text-destructive">
+                      <ShieldCheck className="h-4 w-4" />
+                      <span className="text-xs font-semibold uppercase">
+                        Safety limit — professional care needed
+                      </span>
                     </div>
                   )}
+                  <div className="whitespace-pre-wrap leading-relaxed">{m.content}</div>
+
+                  {m.pendingAction && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        disabled={Boolean(status)}
+                        onClick={() => void send(m.pendingAction!.summary, m.pendingAction!)}
+                      >
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setMessages((prev) =>
+                            prev.map((x, xi) => (xi === i ? { ...x, pendingAction: null } : x)),
+                          )
+                        }
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
+
+                  {m.role === "assistant" && m.meta && (
+                    <div className="space-y-1 pt-1">
+                      {m.meta.sources.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1">
+                          <span className="text-[10px] uppercase text-muted-foreground">
+                            Based on
+                          </span>
+                          {m.meta.sources.map((s) => (
+                            <Badge key={s} variant="secondary" className="text-[10px]">
+                              {s}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-[11px] text-muted-foreground">
+                        Confidence: {CONFIDENCE_LABEL[m.meta.confidence]} — how well-supported this
+                        answer is, not a medical probability.
+                      </p>
+                    </div>
+                  )}
+
                   {m.role === "assistant" && m.meta?.disclaimer && (
                     <p className="pt-1 text-[11px] text-muted-foreground">{m.meta.disclaimer}</p>
                   )}
@@ -159,6 +230,7 @@ function AgentPage() {
                 )}
               </div>
             ))}
+
 
             {status && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -196,6 +268,12 @@ function AgentPage() {
             <Send className="h-4 w-4" />
           </Button>
         </form>
+        </div>
+
+        <aside className="space-y-4 lg:sticky lg:top-4 lg:h-fit">
+          <AgentActionCenter />
+          <AgentActivityLog entries={activity} />
+        </aside>
       </div>
     </DashboardLayout>
   );

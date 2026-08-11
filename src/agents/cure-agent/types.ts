@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { z } from "zod";
+import type { RiskLevel } from "./safety";
+import type { Confidence } from "./verifier";
+import type { ConversationMemory } from "./memory";
 
 export type AgentIntent =
   | "SYMPTOM_GUIDANCE"
@@ -21,6 +24,7 @@ export type ToolContext = {
   userId: string;
   message: string;
   history: AgentMessage[];
+  memory?: ConversationMemory;
 };
 
 export type ToolResult = {
@@ -44,13 +48,27 @@ export type AgentTool<S extends z.ZodTypeAny = z.ZodTypeAny> = {
 
 export type AgentStep = { label: string };
 
+/** One entry in the user-visible Agent Activity log. */
+export type AgentActivityEntry = { at: string; label: string; detail?: string };
+
+/** A consequential write the agent is asking permission to perform. */
+export type PendingAction = {
+  tool: string;
+  summary: string;
+  args: Record<string, string>;
+};
+
 export type AgentResponse = {
   intent: AgentIntent;
   tool: string | null;
   safety: "ok" | "urgent";
+  risk: RiskLevel;
+  confidence: Confidence;
   message: string;
   needsClarification: boolean;
   sources: string[];
   steps: string[];
+  activity: AgentActivityEntry[];
+  pendingAction: PendingAction | null;
   disclaimer: string;
 };
