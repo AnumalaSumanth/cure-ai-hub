@@ -13,6 +13,9 @@ import { askHealthAgent } from "@/lib/agent.functions";
 import type { AgentActivityEntry, AgentResponse, PendingAction } from "@/agents/cure-agent/types";
 
 export const Route = createFileRoute("/_authenticated/agent")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q.slice(0, 500) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Cure AI Agent — Health Assistant" },
