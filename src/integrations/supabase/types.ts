@@ -91,24 +91,89 @@ export type Database = {
           },
         ]
       }
+      health_record_analyses: {
+        Row: {
+          abnormal: Json
+          created_at: string
+          doctor_questions: Json
+          id: string
+          key_findings: Json
+          record_id: string
+          simple_explanation: string | null
+          summary: string | null
+          urgent_note: string | null
+          user_id: string
+          values: Json
+        }
+        Insert: {
+          abnormal?: Json
+          created_at?: string
+          doctor_questions?: Json
+          id?: string
+          key_findings?: Json
+          record_id: string
+          simple_explanation?: string | null
+          summary?: string | null
+          urgent_note?: string | null
+          user_id: string
+          values?: Json
+        }
+        Update: {
+          abnormal?: Json
+          created_at?: string
+          doctor_questions?: Json
+          id?: string
+          key_findings?: Json
+          record_id?: string
+          simple_explanation?: string | null
+          summary?: string | null
+          urgent_note?: string | null
+          user_id?: string
+          values?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_record_analyses_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "health_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       health_records: {
         Row: {
+          file_name: string | null
+          file_type: string | null
           file_url: string | null
           id: string
+          notes: string | null
+          record_date: string | null
+          record_type: string | null
           title: string
           uploaded_at: string
           user_id: string
         }
         Insert: {
+          file_name?: string | null
+          file_type?: string | null
           file_url?: string | null
           id?: string
+          notes?: string | null
+          record_date?: string | null
+          record_type?: string | null
           title: string
           uploaded_at?: string
           user_id: string
         }
         Update: {
+          file_name?: string | null
+          file_type?: string | null
           file_url?: string | null
           id?: string
+          notes?: string | null
+          record_date?: string | null
+          record_type?: string | null
           title?: string
           uploaded_at?: string
           user_id?: string

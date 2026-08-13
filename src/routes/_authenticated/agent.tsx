@@ -13,6 +13,9 @@ import { askHealthAgent } from "@/lib/agent.functions";
 import type { AgentActivityEntry, AgentResponse, PendingAction } from "@/agents/cure-agent/types";
 
 export const Route = createFileRoute("/_authenticated/agent")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q.slice(0, 500) : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Cure AI Agent — Health Assistant" },
@@ -53,9 +56,10 @@ const CONFIDENCE_LABEL = { low: "Low", moderate: "Moderate", high: "High" } as c
 function AgentPage() {
   const ask = useServerFn(askHealthAgent);
   const queryClient = useQueryClient();
+  const { q } = Route.useSearch();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [activity, setActivity] = useState<AgentActivityEntry[]>([]);
-  const [input, setInput] = useState("");
+  const [input, setInput] = useState(q ?? "");
   const [status, setStatus] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
