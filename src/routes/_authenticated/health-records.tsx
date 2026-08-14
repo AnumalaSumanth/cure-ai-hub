@@ -95,6 +95,11 @@ function RecordsPage() {
         user_id: user.id,
         title,
         file_url: fileUrl,
+        record_type: recordType || null,
+        record_date: recordDate || null,
+        notes: notes || null,
+        file_name: fileName,
+        file_type: fileType,
       });
       if (error) throw error;
       toast.success("Record added");
