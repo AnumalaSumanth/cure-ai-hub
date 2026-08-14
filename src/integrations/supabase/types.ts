@@ -23,6 +23,10 @@ export type Database = {
           hospital_name: string | null
           id: string
           notes: string | null
+          reminder_error: string | null
+          reminder_method: string
+          reminder_offset: string
+          reminder_sent_at: string | null
           status: string
           user_id: string
         }
@@ -34,6 +38,10 @@ export type Database = {
           hospital_name?: string | null
           id?: string
           notes?: string | null
+          reminder_error?: string | null
+          reminder_method?: string
+          reminder_offset?: string
+          reminder_sent_at?: string | null
           status?: string
           user_id: string
         }
@@ -45,6 +53,10 @@ export type Database = {
           hospital_name?: string | null
           id?: string
           notes?: string | null
+          reminder_error?: string | null
+          reminder_method?: string
+          reminder_offset?: string
+          reminder_sent_at?: string | null
           status?: string
           user_id?: string
         }
