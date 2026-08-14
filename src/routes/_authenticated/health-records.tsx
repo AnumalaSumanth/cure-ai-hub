@@ -197,7 +197,15 @@ function RecordsPage() {
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id, r.file_url)} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
                   </div>
                   <p className="mt-4 font-semibold">{r.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Uploaded {new Date(r.uploaded_at).toLocaleDateString()}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    {r.record_type && <Badge variant="secondary">{r.record_type}</Badge>}
+                    <p className="text-xs text-muted-foreground">
+                      {r.record_date
+                        ? new Date(r.record_date).toLocaleDateString()
+                        : `Uploaded ${new Date(r.uploaded_at).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  {r.notes && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{r.notes}</p>}
                   {r.file_url && (
                     <div className="mt-3 flex items-center gap-3">
                       {isStoragePath(r.file_url) ? (
