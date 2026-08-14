@@ -77,7 +77,11 @@ function RecordsPage() {
     setSaving(true);
     try {
       let fileUrl: string | null = url || null;
+      let fileName: string | null = null;
+      let fileType: string | null = null;
       if (file && file.size > 0) {
+        fileName = file.name;
+        fileType = file.type || null;
         const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const path = `${user.id}/records/${Date.now()}-${safe}`;
         const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
