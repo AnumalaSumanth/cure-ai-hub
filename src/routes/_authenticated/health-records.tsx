@@ -49,6 +49,8 @@ function RecordsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [recordType, setRecordType] = useState<string>("Blood Test");
+  const [analyzing, setAnalyzing] = useState<{ id: string; title: string } | null>(null);
 
   const { data: records, isLoading } = useQuery({
     queryKey: ["records"],
