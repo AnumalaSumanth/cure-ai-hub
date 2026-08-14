@@ -104,12 +104,40 @@ function AppointmentsPage() {
               <DialogHeader><DialogTitle>New appointment</DialogTitle></DialogHeader>
               <form onSubmit={handleAdd} className="space-y-4">
                 <div className="space-y-1.5"><Label>Doctor name</Label><Input name="doctor" required /></div>
-                <div className="space-y-1.5"><Label>Hospital / Clinic</Label><Input name="hospital" /></div>
+                <div className="space-y-1.5"><Label>Hospital / Clinic</Label><Input name="hospital" required /></div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5"><Label>Date</Label><Input name="date" type="date" required /></div>
-                  <div className="space-y-1.5"><Label>Time</Label><Input name="time" type="time" /></div>
+                  <div className="space-y-1.5"><Label>Time</Label><Input name="time" type="time" required /></div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="reminder_method">Reminder method</Label>
+                    <select
+                      id="reminder_method"
+                      name="reminder_method"
+                      defaultValue="email"
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="email">Email (to your account address)</option>
+                      <option value="sms" disabled>SMS — not configured</option>
+                      <option value="none">No reminder</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="reminder_offset">Remind me</Label>
+                    <select
+                      id="reminder_offset"
+                      name="reminder_offset"
+                      defaultValue="1_day"
+                      className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="1_day">1 day before</option>
+                      <option value="1_hour">1 hour before</option>
+                    </select>
+                  </div>
                 </div>
                 <div className="space-y-1.5"><Label>Notes</Label><Textarea name="notes" rows={3} /></div>
+
                 <DialogFooter><Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save</Button></DialogFooter>
               </form>
             </DialogContent>
