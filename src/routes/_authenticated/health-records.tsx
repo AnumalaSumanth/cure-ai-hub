@@ -25,6 +25,16 @@ export const Route = createFileRoute("/_authenticated/health-records")({
 const BUCKET = "medical-library";
 const STORAGE_PREFIX = "storage:";
 const MAX_SIZE = 25 * 1024 * 1024;
+const RECORD_TYPES = [
+  "Blood Test",
+  "Urine Test",
+  "X-Ray",
+  "MRI",
+  "CT Scan",
+  "Prescription",
+  "Discharge Summary",
+  "Other",
+] as const;
 
 function isStoragePath(value: string | null | undefined): value is string {
   return !!value && value.startsWith(STORAGE_PREFIX);
