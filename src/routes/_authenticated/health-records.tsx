@@ -232,12 +232,32 @@ function RecordsPage() {
                       )}
                     </div>
                   )}
+                  {isStoragePath(r.file_url) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full"
+                      onClick={() => setAnalyzing({ id: r.id, title: r.title })}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4 text-primary" /> Analyze with AI
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {analyzing && (
+        <RecordAnalysisDialog
+          key={analyzing.id}
+          recordId={analyzing.id}
+          title={analyzing.title}
+          open
+          onOpenChange={(v) => !v && setAnalyzing(null)}
+        />
+      )}
     </DashboardLayout>
   );
 }
