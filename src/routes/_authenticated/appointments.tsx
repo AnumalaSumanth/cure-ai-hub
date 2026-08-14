@@ -42,15 +42,28 @@ function AppointmentsPage() {
     e.preventDefault();
     if (!user) return;
     const fd = new FormData(e.currentTarget);
+    const doctor = String(fd.get("doctor") ?? "").trim();
+    const hospital = String(fd.get("hospital") ?? "").trim();
+    const date = String(fd.get("date") ?? "");
+    const time = String(fd.get("time") ?? "");
+    if (!doctor || !hospital || !date || !time) {
+      return toast.error("Doctor, hospital, date and time are required.");
+    }
+    if (new Date(`${date}T${time}`).getTime() < Date.now()) {
+      return toast.error("Appointment date and time cannot be in the past.");
+    }
+    const method = String(fd.get("reminder_method") ?? "email");
     setSaving(true);
     const { error } = await supabase.from("appointments").insert({
       user_id: user.id,
-      doctor_name: String(fd.get("doctor")),
-      hospital_name: String(fd.get("hospital") ?? ""),
-      appointment_date: String(fd.get("date")),
-      appointment_time: (fd.get("time") as string) || null,
+      doctor_name: doctor,
+      hospital_name: hospital,
+      appointment_date: date,
+      appointment_time: time,
       notes: String(fd.get("notes") ?? ""),
       status: "upcoming",
+      reminder_method: method,
+      reminder_offset: String(fd.get("reminder_offset") ?? "1_day"),
     });
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -69,6 +82,13 @@ function AppointmentsPage() {
     qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
     qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
   }
+
+  function displayStatus(a: { status: string; appointment_date: string; appointment_time: string | null }) {
+    if (a.status === "cancelled") return "cancelled";
+    const at = new Date(`${a.appointment_date}T${a.appointment_time ?? "23:59"}`).getTime();
+    return at < Date.now() ? "completed" : "upcoming";
+  }
+
 
   return (
     <DashboardLayout>
