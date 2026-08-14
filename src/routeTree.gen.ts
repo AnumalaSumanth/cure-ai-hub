@@ -28,6 +28,7 @@ import { Route as AuthenticatedAgentRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedHealthTipsIndexRouteImport } from './routes/_authenticated/health-tips.index'
 import { Route as AuthenticatedHealthTipsNewRouteImport } from './routes/_authenticated/health-tips.new'
 import { Route as AuthenticatedHealthTipsIdRouteImport } from './routes/_authenticated/health-tips.$id'
+import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 import { Route as AuthenticatedHealthTipsIdEditRouteImport } from './routes/_authenticated/health-tips.$id.edit'
 
 const ContactRoute = ContactRouteImport.update({
@@ -131,6 +132,12 @@ const AuthenticatedHealthTipsIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedHealthTipsRoute,
   } as any)
+const ApiPublicHooksAppointmentRemindersRoute =
+  ApiPublicHooksAppointmentRemindersRouteImport.update({
+    id: '/api/public/hooks/appointment-reminders',
+    path: '/api/public/hooks/appointment-reminders',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedHealthTipsIdEditRoute =
   AuthenticatedHealthTipsIdEditRouteImport.update({
     id: '/edit',
@@ -158,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/health-tips/': typeof AuthenticatedHealthTipsIndexRoute
   '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
+  '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -178,6 +186,7 @@ export interface FileRoutesByTo {
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/health-tips': typeof AuthenticatedHealthTipsIndexRoute
   '/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
+  '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -201,6 +210,7 @@ export interface FileRoutesById {
   '/_authenticated/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/_authenticated/health-tips/': typeof AuthenticatedHealthTipsIndexRoute
   '/_authenticated/health-tips/$id/edit': typeof AuthenticatedHealthTipsIdEditRoute
+  '/api/public/hooks/appointment-reminders': typeof ApiPublicHooksAppointmentRemindersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/health-tips/new'
     | '/health-tips/'
     | '/health-tips/$id/edit'
+    | '/api/public/hooks/appointment-reminders'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/health-tips/new'
     | '/health-tips'
     | '/health-tips/$id/edit'
+    | '/api/public/hooks/appointment-reminders'
   id:
     | '__root__'
     | '/'
@@ -266,6 +278,7 @@ export interface FileRouteTypes {
     | '/_authenticated/health-tips/new'
     | '/_authenticated/health-tips/'
     | '/_authenticated/health-tips/$id/edit'
+    | '/api/public/hooks/appointment-reminders'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -274,6 +287,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  ApiPublicHooksAppointmentRemindersRoute: typeof ApiPublicHooksAppointmentRemindersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -411,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHealthTipsIdRouteImport
       parentRoute: typeof AuthenticatedHealthTipsRoute
     }
+    '/api/public/hooks/appointment-reminders': {
+      id: '/api/public/hooks/appointment-reminders'
+      path: '/api/public/hooks/appointment-reminders'
+      fullPath: '/api/public/hooks/appointment-reminders'
+      preLoaderRoute: typeof ApiPublicHooksAppointmentRemindersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/health-tips/$id/edit': {
       id: '/_authenticated/health-tips/$id/edit'
       path: '/edit'
@@ -490,6 +511,8 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  ApiPublicHooksAppointmentRemindersRoute:
+    ApiPublicHooksAppointmentRemindersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
