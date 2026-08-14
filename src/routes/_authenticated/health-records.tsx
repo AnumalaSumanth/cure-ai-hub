@@ -137,14 +137,35 @@ function RecordsPage() {
             <DialogContent>
               <DialogHeader><DialogTitle>Add health record</DialogTitle></DialogHeader>
               <form onSubmit={handleAdd} className="space-y-4">
-                <div className="space-y-1.5"><Label>Title</Label><Input name="title" required placeholder="e.g. Blood test results" /></div>
+                <div className="space-y-1.5"><Label>Record name</Label><Input name="title" required placeholder="e.g. Blood test results" /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Record type</Label>
+                    <Select value={recordType} onValueChange={setRecordType}>
+                      <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <SelectContent>
+                        {RECORD_TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Date</Label>
+                    <Input name="record_date" type="date" />
+                  </div>
+                </div>
                 <div className="space-y-1.5">
-                  <Label>Upload file (optional, up to 25MB)</Label>
-                  <Input name="file" type="file" accept="application/pdf,image/*,.doc,.docx" />
+                  <Label>Upload document (PDF, JPG, PNG — up to 25MB)</Label>
+                  <Input name="file" type="file" accept="application/pdf,image/jpeg,image/png" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Or document URL (optional)</Label>
                   <Input name="url" type="url" placeholder="https://…" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Notes (optional)</Label>
+                  <Textarea name="notes" rows={3} placeholder="Anything you want to remember about this record" />
                 </div>
                 <DialogFooter><Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save</Button></DialogFooter>
               </form>
