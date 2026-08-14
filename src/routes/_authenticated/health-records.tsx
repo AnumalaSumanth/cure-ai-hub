@@ -25,6 +25,16 @@ export const Route = createFileRoute("/_authenticated/health-records")({
 const BUCKET = "medical-library";
 const STORAGE_PREFIX = "storage:";
 const MAX_SIZE = 25 * 1024 * 1024;
+const RECORD_TYPES = [
+  "Blood Test",
+  "Urine Test",
+  "X-Ray",
+  "MRI",
+  "CT Scan",
+  "Prescription",
+  "Discharge Summary",
+  "Other",
+] as const;
 
 function isStoragePath(value: string | null | undefined): value is string {
   return !!value && value.startsWith(STORAGE_PREFIX);
@@ -49,6 +59,8 @@ function RecordsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [recordType, setRecordType] = useState<string>("Blood Test");
+  const [analyzing, setAnalyzing] = useState<{ id: string; title: string } | null>(null);
 
   const { data: records, isLoading } = useQuery({
     queryKey: ["records"],
@@ -65,6 +77,8 @@ function RecordsPage() {
     const fd = new FormData(e.currentTarget);
     const title = String(fd.get("title") ?? "").trim();
     const url = String(fd.get("url") ?? "").trim();
+    const recordDate = String(fd.get("record_date") ?? "").trim();
+    const notes = String(fd.get("notes") ?? "").trim();
     const file = fd.get("file") as File | null;
 
     if (!title) return toast.error("Title is required");
@@ -73,7 +87,11 @@ function RecordsPage() {
     setSaving(true);
     try {
       let fileUrl: string | null = url || null;
+      let fileName: string | null = null;
+      let fileType: string | null = null;
       if (file && file.size > 0) {
+        fileName = file.name;
+        fileType = file.type || null;
         const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const path = `${user.id}/records/${Date.now()}-${safe}`;
         const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, file, {
@@ -87,6 +105,11 @@ function RecordsPage() {
         user_id: user.id,
         title,
         file_url: fileUrl,
+        record_type: recordType || null,
+        record_date: recordDate || null,
+        notes: notes || null,
+        file_name: fileName,
+        file_type: fileType,
       });
       if (error) throw error;
       toast.success("Record added");
@@ -124,14 +147,35 @@ function RecordsPage() {
             <DialogContent>
               <DialogHeader><DialogTitle>Add health record</DialogTitle></DialogHeader>
               <form onSubmit={handleAdd} className="space-y-4">
-                <div className="space-y-1.5"><Label>Title</Label><Input name="title" required placeholder="e.g. Blood test results" /></div>
+                <div className="space-y-1.5"><Label>Record name</Label><Input name="title" required placeholder="e.g. Blood test results" /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label>Record type</Label>
+                    <Select value={recordType} onValueChange={setRecordType}>
+                      <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                      <SelectContent>
+                        {RECORD_TYPES.map((t) => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Date</Label>
+                    <Input name="record_date" type="date" />
+                  </div>
+                </div>
                 <div className="space-y-1.5">
-                  <Label>Upload file (optional, up to 25MB)</Label>
-                  <Input name="file" type="file" accept="application/pdf,image/*,.doc,.docx" />
+                  <Label>Upload document (PDF, JPG, PNG — up to 25MB)</Label>
+                  <Input name="file" type="file" accept="application/pdf,image/jpeg,image/png" />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Or document URL (optional)</Label>
                   <Input name="url" type="url" placeholder="https://…" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Notes (optional)</Label>
+                  <Textarea name="notes" rows={3} placeholder="Anything you want to remember about this record" />
                 </div>
                 <DialogFooter><Button type="submit" disabled={saving}>{saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save</Button></DialogFooter>
               </form>
@@ -153,7 +197,15 @@ function RecordsPage() {
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id, r.file_url)} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
                   </div>
                   <p className="mt-4 font-semibold">{r.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">Uploaded {new Date(r.uploaded_at).toLocaleDateString()}</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    {r.record_type && <Badge variant="secondary">{r.record_type}</Badge>}
+                    <p className="text-xs text-muted-foreground">
+                      {r.record_date
+                        ? new Date(r.record_date).toLocaleDateString()
+                        : `Uploaded ${new Date(r.uploaded_at).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                  {r.notes && <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{r.notes}</p>}
                   {r.file_url && (
                     <div className="mt-3 flex items-center gap-3">
                       {isStoragePath(r.file_url) ? (
@@ -180,12 +232,32 @@ function RecordsPage() {
                       )}
                     </div>
                   )}
+                  {isStoragePath(r.file_url) && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4 w-full"
+                      onClick={() => setAnalyzing({ id: r.id, title: r.title })}
+                    >
+                      <Sparkles className="mr-2 h-4 w-4 text-primary" /> Analyze with AI
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
       </div>
+
+      {analyzing && (
+        <RecordAnalysisDialog
+          key={analyzing.id}
+          recordId={analyzing.id}
+          title={analyzing.title}
+          open
+          onOpenChange={(v) => !v && setAnalyzing(null)}
+        />
+      )}
     </DashboardLayout>
   );
 }
