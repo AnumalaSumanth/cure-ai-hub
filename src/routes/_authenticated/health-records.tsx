@@ -67,6 +67,8 @@ function RecordsPage() {
     const fd = new FormData(e.currentTarget);
     const title = String(fd.get("title") ?? "").trim();
     const url = String(fd.get("url") ?? "").trim();
+    const recordDate = String(fd.get("record_date") ?? "").trim();
+    const notes = String(fd.get("notes") ?? "").trim();
     const file = fd.get("file") as File | null;
 
     if (!title) return toast.error("Title is required");
