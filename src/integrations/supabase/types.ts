@@ -228,32 +228,106 @@ export type Database = {
         }
         Relationships: []
       }
+      medicine_doses: {
+        Row: {
+          created_at: string
+          id: string
+          medicine_id: string
+          scheduled_date: string
+          scheduled_time: string
+          status: string
+          taken_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          medicine_id: string
+          scheduled_date: string
+          scheduled_time: string
+          status?: string
+          taken_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          medicine_id?: string
+          scheduled_date?: string
+          scheduled_time?: string
+          status?: string
+          taken_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medicine_doses_medicine_id_fkey"
+            columns: ["medicine_id"]
+            isOneToOne: false
+            referencedRelation: "medicines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medicines: {
         Row: {
           created_at: string
           dosage: string | null
+          end_date: string | null
           frequency: string | null
           id: string
           medicine_name: string
+          notes: string | null
+          reminder_app: boolean
+          reminder_email: boolean
+          reminder_lead_minutes: number
+          reminder_sms: boolean
           reminder_time: string | null
+          start_date: string
+          strength: string | null
+          times: string[]
+          updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           dosage?: string | null
+          end_date?: string | null
           frequency?: string | null
           id?: string
           medicine_name: string
+          notes?: string | null
+          reminder_app?: boolean
+          reminder_email?: boolean
+          reminder_lead_minutes?: number
+          reminder_sms?: boolean
           reminder_time?: string | null
+          start_date?: string
+          strength?: string | null
+          times?: string[]
+          updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
           dosage?: string | null
+          end_date?: string | null
           frequency?: string | null
           id?: string
           medicine_name?: string
+          notes?: string | null
+          reminder_app?: boolean
+          reminder_email?: boolean
+          reminder_lead_minutes?: number
+          reminder_sms?: boolean
           reminder_time?: string | null
+          start_date?: string
+          strength?: string | null
+          times?: string[]
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
