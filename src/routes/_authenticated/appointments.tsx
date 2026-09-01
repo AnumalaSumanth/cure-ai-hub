@@ -170,7 +170,7 @@ function AppointmentsPage() {
                       <TableCell className="text-muted-foreground">{a.hospital_name ?? "—"}</TableCell>
                       <TableCell>{a.appointment_date}</TableCell>
                       <TableCell>{a.appointment_time ?? "—"}</TableCell>
-                      <TableCell><Badge variant={a.status === "upcoming" ? "default" : "secondary"}>{a.status}</Badge></TableCell>
+                      <TableCell><Badge variant={displayStatus(a) === "upcoming" ? "default" : "secondary"}>{displayStatus(a)}</Badge></TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
                       </TableCell>
