@@ -73,17 +73,21 @@ export function RecordAnalysisDialog({
   title,
   open,
   onOpenChange,
+  initial = null,
+  onSaved,
 }: {
   recordId: string;
   title: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  initial?: RecordAnalysisResult | null;
+  onSaved?: () => void;
 }) {
   const analyze = useServerFn(analyzeHealthRecord);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(0);
-  const [result, setResult] = useState<RecordAnalysisResult | null>(null);
+  const [result, setResult] = useState<RecordAnalysisResult | null>(initial);
   const [saving, setSaving] = useState(false);
   const started = useRef(false);
 
@@ -111,7 +115,7 @@ export function RecordAnalysisDialog({
   useEffect(() => {
     if (open && !started.current) {
       started.current = true;
-      void run();
+      if (!initial) void run();
     }
     if (!open) started.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -137,6 +141,7 @@ export function RecordAnalysisDialog({
       });
       if (error) throw error;
       toast.success("Analysis saved");
+      onSaved?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save analysis");
     } finally {
