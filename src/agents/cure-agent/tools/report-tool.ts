@@ -37,8 +37,8 @@ export const reportTool: AgentTool = {
         ok: true,
         needsClarification: true,
         content: document_id
-          ? "I couldn't find that report in your Medical Library, or it isn't yours to access."
-          : "I don't see a report in your Medical Library yet. Upload it under **Medical Library** and I'll walk you through it.",
+          ? "I couldn't find that report in your uploaded documents, or it isn't yours to access."
+          : "I don't see a report in your uploaded documents yet. Upload it under **Health Records** and I'll walk you through it.",
       };
     }
 
@@ -61,7 +61,7 @@ export const reportTool: AgentTool = {
     if (!text) {
       return {
         ok: true,
-        content: `I found **${doc.file_name}** in your Medical Library, but I can't read its contents directly (only plain-text reports are readable today). You can paste the values here and I'll explain what they mean.\n\n${AGENT_DISCLAIMER}`,
+        content: `I found **${doc.file_name}** in your uploaded documents, but I can't read its contents directly (only plain-text reports are readable today). You can paste the values here and I'll explain what they mean.\n\n${AGENT_DISCLAIMER}`,
         sources: [doc.file_name],
       };
     }
