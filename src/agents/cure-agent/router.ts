@@ -31,22 +31,6 @@ const RULES: { intent: AgentIntent; patterns: RegExp[] }[] = [
     ],
   },
   {
-    intent: "STUDY",
-    patterns: [
-      /\bstudy (plan|schedule|guide)\b/i,
-      /\b(revision|exam|syllabus|mnemonic|flashcards?)\b/i,
-      /\b(study|learn|prepare) (for|about)\b[^.?!]{0,40}\b(anatomy|pharmacology|physiology|pathology|biochemistry|microbiology|exam)\b/i,
-    ],
-  },
-  {
-    intent: "MEDICAL_LIBRARY",
-    patterns: [
-      /\b(my )?(medical )?library\b/i,
-      /\b(my|uploaded|saved) (documents?|notes?|files?|pdfs?)\b/i,
-      /\bsearch my (documents?|notes?|files?)\b/i,
-    ],
-  },
-  {
     intent: "SYMPTOM_GUIDANCE",
     patterns: [
       /\bi (have|had|am having|'ve had|feel|am feeling|felt)\b/i,
@@ -94,10 +78,6 @@ export function toolForIntent(intent: AgentIntent): string | null {
       return "create_medicine_reminder";
     case "APPOINTMENT":
       return "appointment_assistance";
-    case "STUDY":
-      return "study_assistant";
-    case "MEDICAL_LIBRARY":
-      return "search_medical_library";
     default:
       return null;
   }

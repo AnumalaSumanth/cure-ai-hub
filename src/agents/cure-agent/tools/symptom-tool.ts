@@ -28,7 +28,7 @@ export const symptomTool: AgentTool = {
     try {
       const { retrieveContext } = await import("@/lib/rag.server");
       retrieved = await retrieveContext(ctx.supabase, ctx.userId, symptoms, 3);
-      if (retrieved) sources.push("Your Medical Library");
+      if (retrieved) sources.push("Your uploaded documents");
     } catch (err) {
       console.error("[agent:symptom] retrieval failed", (err as Error)?.message);
     }
@@ -41,7 +41,7 @@ Conversation so far (use it to resolve references like "it"):
 ${history || "(none)"}
 
 The user describes: ${symptoms}
-${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's Medical Library:${retrieved}` : ""}
+${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's uploaded documents:${retrieved}` : ""}
 
 Respond in short markdown:
 1. One sentence acknowledging what they described.

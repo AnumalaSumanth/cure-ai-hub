@@ -11,8 +11,6 @@ export type AgentIntent =
   | "REPORT_ANALYSIS"
   | "MEDICINE_REMINDER"
   | "APPOINTMENT"
-  | "STUDY"
-  | "MEDICAL_LIBRARY"
   | "GENERAL_HEALTH"
   | "UNSUPPORTED";
 

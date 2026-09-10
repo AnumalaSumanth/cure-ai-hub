@@ -28,13 +28,13 @@ export const medicalKnowledgeTool: AgentTool = {
     try {
       const { retrieveContext } = await import("@/lib/rag.server");
       retrieved = await retrieveContext(ctx.supabase, ctx.userId, query, 4);
-      if (retrieved) sources.push("Your Medical Library");
+      if (retrieved) sources.push("Your uploaded documents");
     } catch (err) {
       console.error("[agent:knowledge] retrieval failed", (err as Error)?.message);
     }
 
     const memo = ctx.memory ? memoryContext(ctx.memory) : "";
-    const grounding = `${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's Medical Library:${retrieved}` : ""}`;
+    const grounding = `${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's uploaded documents:${retrieved}` : ""}`;
 
     const prompt = `${MEDICAL_SAFETY_SYSTEM}
 

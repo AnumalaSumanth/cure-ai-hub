@@ -14,11 +14,9 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedStudyAiRouteImport } from './routes/_authenticated/study-ai'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
-import { Route as AuthenticatedMedicalLibraryRouteImport } from './routes/_authenticated/medical-library'
 import { Route as AuthenticatedImageAnalysisRouteImport } from './routes/_authenticated/image-analysis'
 import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
 import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
@@ -55,11 +53,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedStudyAiRoute = AuthenticatedStudyAiRouteImport.update({
-  id: '/study-ai',
-  path: '/study-ai',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -75,12 +68,6 @@ const AuthenticatedMedicinesRoute = AuthenticatedMedicinesRouteImport.update({
   path: '/medicines',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMedicalLibraryRoute =
-  AuthenticatedMedicalLibraryRouteImport.update({
-    id: '/medical-library',
-    path: '/medical-library',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedImageAnalysisRoute =
   AuthenticatedImageAnalysisRouteImport.update({
     id: '/image-analysis',
@@ -156,11 +143,9 @@ export interface FileRoutesByFullPath {
   '/health-records': typeof AuthenticatedHealthRecordsRoute
   '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/image-analysis': typeof AuthenticatedImageAnalysisRoute
-  '/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/study-ai': typeof AuthenticatedStudyAiRoute
   '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/health-tips/': typeof AuthenticatedHealthTipsIndexRoute
@@ -177,11 +162,9 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
   '/image-analysis': typeof AuthenticatedImageAnalysisRoute
-  '/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
-  '/study-ai': typeof AuthenticatedStudyAiRoute
   '/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/health-tips': typeof AuthenticatedHealthTipsIndexRoute
@@ -201,11 +184,9 @@ export interface FileRoutesById {
   '/_authenticated/health-records': typeof AuthenticatedHealthRecordsRoute
   '/_authenticated/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/_authenticated/image-analysis': typeof AuthenticatedImageAnalysisRoute
-  '/_authenticated/medical-library': typeof AuthenticatedMedicalLibraryRoute
   '/_authenticated/medicines': typeof AuthenticatedMedicinesRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_authenticated/study-ai': typeof AuthenticatedStudyAiRoute
   '/_authenticated/health-tips/$id': typeof AuthenticatedHealthTipsIdRouteWithChildren
   '/_authenticated/health-tips/new': typeof AuthenticatedHealthTipsNewRoute
   '/_authenticated/health-tips/': typeof AuthenticatedHealthTipsIndexRoute
@@ -225,11 +206,9 @@ export interface FileRouteTypes {
     | '/health-records'
     | '/health-tips'
     | '/image-analysis'
-    | '/medical-library'
     | '/medicines'
     | '/profile'
     | '/settings'
-    | '/study-ai'
     | '/health-tips/$id'
     | '/health-tips/new'
     | '/health-tips/'
@@ -246,11 +225,9 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/health-records'
     | '/image-analysis'
-    | '/medical-library'
     | '/medicines'
     | '/profile'
     | '/settings'
-    | '/study-ai'
     | '/health-tips/$id'
     | '/health-tips/new'
     | '/health-tips'
@@ -269,11 +246,9 @@ export interface FileRouteTypes {
     | '/_authenticated/health-records'
     | '/_authenticated/health-tips'
     | '/_authenticated/image-analysis'
-    | '/_authenticated/medical-library'
     | '/_authenticated/medicines'
     | '/_authenticated/profile'
     | '/_authenticated/settings'
-    | '/_authenticated/study-ai'
     | '/_authenticated/health-tips/$id'
     | '/_authenticated/health-tips/new'
     | '/_authenticated/health-tips/'
@@ -327,13 +302,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/study-ai': {
-      id: '/_authenticated/study-ai'
-      path: '/study-ai'
-      fullPath: '/study-ai'
-      preLoaderRoute: typeof AuthenticatedStudyAiRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -353,13 +321,6 @@ declare module '@tanstack/react-router' {
       path: '/medicines'
       fullPath: '/medicines'
       preLoaderRoute: typeof AuthenticatedMedicinesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/medical-library': {
-      id: '/_authenticated/medical-library'
-      path: '/medical-library'
-      fullPath: '/medical-library'
-      preLoaderRoute: typeof AuthenticatedMedicalLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/image-analysis': {
@@ -481,11 +442,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedHealthRecordsRoute: typeof AuthenticatedHealthRecordsRoute
   AuthenticatedHealthTipsRoute: typeof AuthenticatedHealthTipsRouteWithChildren
   AuthenticatedImageAnalysisRoute: typeof AuthenticatedImageAnalysisRoute
-  AuthenticatedMedicalLibraryRoute: typeof AuthenticatedMedicalLibraryRoute
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedStudyAiRoute: typeof AuthenticatedStudyAiRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -495,11 +454,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedHealthRecordsRoute: AuthenticatedHealthRecordsRoute,
   AuthenticatedHealthTipsRoute: AuthenticatedHealthTipsRouteWithChildren,
   AuthenticatedImageAnalysisRoute: AuthenticatedImageAnalysisRoute,
-  AuthenticatedMedicalLibraryRoute: AuthenticatedMedicalLibraryRoute,
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedStudyAiRoute: AuthenticatedStudyAiRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
