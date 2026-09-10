@@ -11,8 +11,6 @@ import {
   Bell,
   Search,
   Lightbulb,
-  BookOpen,
-  GraduationCap,
   Camera,
   Bot,
 } from "lucide-react";
@@ -45,9 +43,6 @@ const items = [
   { title: "Medicines", url: "/medicines", icon: Pill },
   { title: "Appointments", url: "/appointments", icon: Calendar },
   { title: "Health Records", url: "/health-records", icon: FileText },
-  { title: "Health Tips", url: "/health-tips", icon: Lightbulb },
-  { title: "Medical Library", url: "/medical-library", icon: BookOpen },
-  { title: "Study AI", url: "/study-ai", icon: GraduationCap },
   { title: "Image Analysis", url: "/image-analysis", icon: Camera },
   { title: "Settings", url: "/settings", icon: Settings },
 ] as const;
