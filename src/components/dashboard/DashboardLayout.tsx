@@ -43,6 +43,7 @@ const items = [
   { title: "Medicines", url: "/medicines", icon: Pill },
   { title: "Appointments", url: "/appointments", icon: Calendar },
   { title: "Health Records", url: "/health-records", icon: FileText },
+  { title: "Health Tips", url: "/health-tips", icon: Lightbulb },
   { title: "Image Analysis", url: "/image-analysis", icon: Camera },
   { title: "Settings", url: "/settings", icon: Settings },
 ] as const;

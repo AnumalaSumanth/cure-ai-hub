@@ -125,8 +125,8 @@ function AgentPage() {
         <div>
           <h1 className="font-display text-2xl font-bold">Cure AI Agent</h1>
           <p className="text-sm text-muted-foreground">
-            Educational health guidance — it can also search your Medical Library, set medicine
-            reminders and help with study topics.
+            Educational health guidance — it can also help explain your reports and set medicine
+            reminders.
           </p>
         </div>
 

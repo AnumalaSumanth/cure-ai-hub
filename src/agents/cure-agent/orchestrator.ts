@@ -22,8 +22,6 @@ import { medicalKnowledgeTool } from "./tools/medical-knowledge-tool";
 import { reportTool } from "./tools/report-tool";
 import { reminderTool } from "./tools/reminder-tool";
 import { appointmentTool } from "./tools/appointment-tool";
-import { studyTool } from "./tools/study-tool";
-import { libraryTool } from "./tools/library-tool";
 
 const TOOLS: Record<string, AgentTool> = {
   [symptomTool.name]: symptomTool,
@@ -31,8 +29,6 @@ const TOOLS: Record<string, AgentTool> = {
   [reportTool.name]: reportTool,
   [reminderTool.name]: reminderTool,
   [appointmentTool.name]: appointmentTool,
-  [studyTool.name]: studyTool,
-  [libraryTool.name]: libraryTool,
 };
 
 /** Deterministic argument extraction — model output is never trusted directly. */
@@ -66,15 +62,6 @@ export function buildArgs(tool: string, message: string, history: AgentMessage[]
         appointment_date: message.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[/-]\d{1,2}[/-]\d{4})\b/)?.[0],
         appointment_time: message.match(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/i)?.[0],
       };
-    }
-    case "study_assistant":
-      return {
-        topic: message.slice(0, 500),
-        wants_plan: /\b(plan|schedule|prepare|revision)\b/i.test(message),
-      };
-    case "search_medical_library": {
-      const m = message.match(/\b(?:about|on|for|find|search)\s+([a-z0-9][\w .-]{2,60})/i)?.[1];
-      return { query: m?.trim() };
     }
     default:
       return {};

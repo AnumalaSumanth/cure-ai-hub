@@ -8,7 +8,7 @@ import { AuditTrail } from "../audit";
 import { searchTrustedNotes, formatTrustedNotes } from "../knowledge/trusted-sources";
 import { parseTime } from "../tools/reminder-tool";
 import { reportTool } from "../tools/report-tool";
-import { libraryTool } from "../tools/library-tool";
+
 import { appointmentTool } from "../tools/appointment-tool";
 import { medicalKnowledgeTool } from "../tools/medical-knowledge-tool";
 import type { ToolContext } from "../types";
@@ -62,19 +62,9 @@ describe("intent router", () => {
   it("routes appointments", () => {
     expect(classifyIntent("Show my appointments")).toBe("APPOINTMENT");
   });
-  it("routes study requests", () => {
-    expect(classifyIntent("Create a study plan for anatomy.")).toBe("STUDY");
-  });
-  it("routes medical library searches", () => {
-    expect(classifyIntent("Search my documents for cholesterol")).toBe("MEDICAL_LIBRARY");
-  });
   it("marks unrelated requests unsupported", () => {
     expect(classifyIntent("Write me a poem about bitcoin")).toBe("UNSUPPORTED");
     expect(toolForIntent("UNSUPPORTED")).toBeNull();
-  });
-  it("maps intents to a single tool", () => {
-    expect(toolForIntent("STUDY")).toBe("study_assistant");
-    expect(toolForIntent("MEDICAL_LIBRARY")).toBe("search_medical_library");
   });
 });
 
@@ -205,11 +195,6 @@ describe("tool failures degrade safely", () => {
     const res = await reportTool.execute({ query: "explain" }, ctx({ supabase: client }));
     expect(res.ok).toBe(false);
     expect(res.content).toMatch(/try again/i);
-  });
-  it("library tool returns a safe message on a database error", async () => {
-    const { client } = stubClient([], { message: "boom" });
-    const res = await libraryTool.execute({ query: "labs" }, ctx({ supabase: client }));
-    expect(res.ok).toBe(false);
   });
   it("appointment tool asks for details instead of inventing a booking", async () => {
     const res = await appointmentTool.execute({ action: "create" }, ctx());
