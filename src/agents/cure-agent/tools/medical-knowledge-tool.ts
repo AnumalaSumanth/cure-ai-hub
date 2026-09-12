@@ -25,18 +25,28 @@ export const medicalKnowledgeTool: AgentTool = {
 
     // 2. The user's own Medical Library via the existing RAG layer.
     let retrieved = "";
+    let groundingRules = "";
+    let noGrounding = "";
     try {
-      const { retrieveContext } = await import("@/lib/rag.server");
-      retrieved = await retrieveContext(ctx.supabase, ctx.userId, query, 4);
-      if (retrieved) sources.push("Your uploaded documents");
+      const { retrieveGrounding, GROUNDING_RULES, NO_GROUNDING_NOTE } = await import("@/lib/rag.server");
+      const g = await retrieveGrounding(ctx.supabase, ctx.userId, query, 4);
+      groundingRules = GROUNDING_RULES;
+      if (g.used) {
+        retrieved = g.context;
+        sources.push(...g.sources);
+      } else {
+        noGrounding = NO_GROUNDING_NOTE;
+      }
     } catch (err) {
       console.error("[agent:knowledge] retrieval failed", (err as Error)?.message);
     }
 
     const memo = ctx.memory ? memoryContext(ctx.memory) : "";
-    const grounding = `${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's uploaded documents:${retrieved}` : ""}`;
+    const grounding = `${formatTrustedNotes(notes)}${retrieved}${noGrounding}`;
 
     const prompt = `${MEDICAL_SAFETY_SYSTEM}
+
+${groundingRules}
 
 ${memo}
 
@@ -44,7 +54,6 @@ Question: ${query}
 ${grounding || "\n\n(No retrieved reference material was available.)"}
 
 Answer in short markdown: a plain-language explanation, why it matters, and typical context.
-Ground the answer in the retrieved material above wherever it is relevant, and prefer it over your own recollection. If the material does not cover the question, say what is general knowledge instead.
 Never invent citations, studies, journals or sources. Never give a diagnosis, prescription or dosage.`;
 
     try {
