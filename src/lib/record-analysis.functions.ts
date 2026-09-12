@@ -198,7 +198,24 @@ export const analyzeHealthRecord = createServerFn({ method: "POST" })
       | { type: "image"; image: string }
       | { type: "file"; data: string; mediaType: string };
 
-    const parts: Part[] = [{ type: "text", text: `${INSTRUCTIONS}\n\n${meta}` }];
+    // General reference material, kept strictly separate from the report itself.
+    let reference = "";
+    try {
+      const { retrieveGrounding } = await import("./rag.server");
+      const g = await retrieveGrounding(
+        supabase,
+        userId,
+        [record.title, record.record_type, record.notes].filter(Boolean).join(" "),
+        2,
+      );
+      if (g.used) {
+        reference = `\n\nGeneral reference material from the user's own Medical Library. This is background information only — it is NOT part of this report. Use it only to explain terms or what a test measures, never as a finding of this report, and never invent sources:${g.context}`;
+      }
+    } catch (err) {
+      console.error("[record-analysis] reference retrieval failed", (err as Error)?.message);
+    }
+
+    const parts: Part[] = [{ type: "text", text: `${INSTRUCTIONS}\n\n${meta}${reference}` }];
 
     if (mime.startsWith("image/")) {
       parts.push({ type: "image", image: `data:${mime};base64,${toBase64(bytes)}` });
