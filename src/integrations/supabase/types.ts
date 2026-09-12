@@ -66,30 +66,36 @@ export type Database = {
         Row: {
           chunk_index: number
           content: string
+          content_tsv: unknown
           created_at: string
           document_id: string
           embedding: string
           id: string
+          metadata: Json
           model_version: string
           user_id: string
         }
         Insert: {
           chunk_index: number
           content: string
+          content_tsv?: unknown
           created_at?: string
           document_id: string
           embedding: string
           id?: string
+          metadata?: Json
           model_version?: string
           user_id: string
         }
         Update: {
           chunk_index?: number
           content?: string
+          content_tsv?: unknown
           created_at?: string
           document_id?: string
           embedding?: string
           id?: string
+          metadata?: Json
           model_version?: string
           user_id?: string
         }
@@ -481,6 +487,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      hybrid_match_document_chunks: {
+        Args: {
+          match_count?: number
+          match_user_id: string
+          query_embedding: string
+          query_text?: string
+        }
+        Returns: {
+          chunk_index: number
+          content: string
+          document_id: string
+          id: string
+          keyword_rank: number
+          metadata: Json
+          similarity: number
+        }[]
+      }
       match_document_chunks: {
         Args: {
           match_count?: number

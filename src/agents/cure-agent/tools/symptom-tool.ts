@@ -25,15 +25,25 @@ export const symptomTool: AgentTool = {
     for (const n of notes) sources.push(n.source);
 
     let retrieved = "";
+    let groundingRules = "";
+    let noGrounding = "";
     try {
-      const { retrieveContext } = await import("@/lib/rag.server");
-      retrieved = await retrieveContext(ctx.supabase, ctx.userId, symptoms, 3);
-      if (retrieved) sources.push("Your uploaded documents");
+      const { retrieveGrounding, GROUNDING_RULES, NO_GROUNDING_NOTE } = await import("@/lib/rag.server");
+      const g = await retrieveGrounding(ctx.supabase, ctx.userId, symptoms, 3);
+      groundingRules = GROUNDING_RULES;
+      if (g.used) {
+        retrieved = g.context;
+        sources.push(...g.sources);
+      } else {
+        noGrounding = NO_GROUNDING_NOTE;
+      }
     } catch (err) {
       console.error("[agent:symptom] retrieval failed", (err as Error)?.message);
     }
 
     const prompt = `${MEDICAL_SAFETY_SYSTEM}
+
+${groundingRules}
 
 ${ctx.memory ? memoryContext(ctx.memory) : ""}
 
@@ -41,7 +51,7 @@ Conversation so far (use it to resolve references like "it"):
 ${history || "(none)"}
 
 The user describes: ${symptoms}
-${formatTrustedNotes(notes)}${retrieved ? `\n\nFrom the user's uploaded documents:${retrieved}` : ""}
+${formatTrustedNotes(notes)}${retrieved}${noGrounding}
 
 Respond in short markdown:
 1. One sentence acknowledging what they described.
@@ -50,7 +60,7 @@ Respond in short markdown:
 4. "See a professional if" — clear warning signs.
 5. Exactly ONE follow-up question that would help a clinician (e.g. duration or severity 1-10), unless the user already answered it.
 
-Use the retrieved reference material above where relevant. Never state a diagnosis. Never suggest starting, stopping or changing prescription medication.`;
+Never state a diagnosis. Never suggest starting, stopping or changing prescription medication.`;
 
     try {
       const text = await withAiFallback(async (model) => {

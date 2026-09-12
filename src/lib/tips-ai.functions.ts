@@ -65,14 +65,20 @@ export const generateTip = createServerFn({ method: "POST" })
     z.object({ topic: z.string().max(500).optional() }).parse(input ?? {}),
   )
   .handler(async ({ data, context }) => {
-    const { retrieveContext } = await import("./rag.server");
-    const ragContext = data.topic
-      ? await retrieveContext(context.supabase, context.userId, data.topic, 4)
-      : "";
+    const { retrieveGrounding, GROUNDING_RULES, NO_GROUNDING_NOTE } = await import("./rag.server");
+    const grounding = data.topic
+      ? await retrieveGrounding(context.supabase, context.userId, data.topic, 3)
+      : null;
+    const ragContext = grounding?.used
+      ? `${GROUNDING_RULES}\n${grounding.context}`
+      : grounding
+        ? NO_GROUNDING_NOTE
+        : "";
 
     const prompt = `Write a professional, medically responsible health tip${
       data.topic ? ` about: ${data.topic}` : ""
     }. Keep it beginner friendly, easy to understand, non-diagnostic, and well structured.
+Do not make medical claims that are not supported by the retrieved material or well-established general health guidance. Never invent citations.
 ${ragContext}
 Return ONLY valid JSON (no markdown fences, no prose) matching:
 { "title": "string", "category": "string", "target_audience": "string", "content": "string", "tags": ["string"] }
