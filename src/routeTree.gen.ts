@@ -19,6 +19,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
 import { Route as AuthenticatedImageAnalysisRouteImport } from './routes/_authenticated/image-analysis'
 import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
+import { Route as AuthenticatedHealthTimelineRouteImport } from './routes/_authenticated/health-timeline'
 import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
@@ -79,6 +80,12 @@ const AuthenticatedHealthTipsRoute = AuthenticatedHealthTipsRouteImport.update({
   path: '/health-tips',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHealthTimelineRoute =
+  AuthenticatedHealthTimelineRouteImport.update({
+    id: '/health-timeline',
+    path: '/health-timeline',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHealthRecordsRoute =
   AuthenticatedHealthRecordsRouteImport.update({
     id: '/health-records',
@@ -141,6 +148,7 @@ export interface FileRoutesByFullPath {
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/health-timeline': typeof AuthenticatedHealthTimelineRoute
   '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/image-analysis': typeof AuthenticatedImageAnalysisRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
@@ -161,6 +169,7 @@ export interface FileRoutesByTo {
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/health-timeline': typeof AuthenticatedHealthTimelineRoute
   '/image-analysis': typeof AuthenticatedImageAnalysisRoute
   '/medicines': typeof AuthenticatedMedicinesRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -182,6 +191,7 @@ export interface FileRoutesById {
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/health-records': typeof AuthenticatedHealthRecordsRoute
+  '/_authenticated/health-timeline': typeof AuthenticatedHealthTimelineRoute
   '/_authenticated/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
   '/_authenticated/image-analysis': typeof AuthenticatedImageAnalysisRoute
   '/_authenticated/medicines': typeof AuthenticatedMedicinesRoute
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/dashboard'
     | '/health-records'
+    | '/health-timeline'
     | '/health-tips'
     | '/image-analysis'
     | '/medicines'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/dashboard'
     | '/health-records'
+    | '/health-timeline'
     | '/image-analysis'
     | '/medicines'
     | '/profile'
@@ -244,6 +256,7 @@ export interface FileRouteTypes {
     | '/_authenticated/appointments'
     | '/_authenticated/dashboard'
     | '/_authenticated/health-records'
+    | '/_authenticated/health-timeline'
     | '/_authenticated/health-tips'
     | '/_authenticated/image-analysis'
     | '/_authenticated/medicines'
@@ -335,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/health-tips'
       fullPath: '/health-tips'
       preLoaderRoute: typeof AuthenticatedHealthTipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/health-timeline': {
+      id: '/_authenticated/health-timeline'
+      path: '/health-timeline'
+      fullPath: '/health-timeline'
+      preLoaderRoute: typeof AuthenticatedHealthTimelineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/health-records': {
@@ -440,6 +460,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHealthRecordsRoute: typeof AuthenticatedHealthRecordsRoute
+  AuthenticatedHealthTimelineRoute: typeof AuthenticatedHealthTimelineRoute
   AuthenticatedHealthTipsRoute: typeof AuthenticatedHealthTipsRouteWithChildren
   AuthenticatedImageAnalysisRoute: typeof AuthenticatedImageAnalysisRoute
   AuthenticatedMedicinesRoute: typeof AuthenticatedMedicinesRoute
@@ -452,6 +473,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHealthRecordsRoute: AuthenticatedHealthRecordsRoute,
+  AuthenticatedHealthTimelineRoute: AuthenticatedHealthTimelineRoute,
   AuthenticatedHealthTipsRoute: AuthenticatedHealthTipsRouteWithChildren,
   AuthenticatedImageAnalysisRoute: AuthenticatedImageAnalysisRoute,
   AuthenticatedMedicinesRoute: AuthenticatedMedicinesRoute,
