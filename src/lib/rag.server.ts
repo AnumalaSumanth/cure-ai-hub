@@ -188,7 +188,7 @@ async function embed(inputs: string[]): Promise<number[][]> {
 export async function indexPendingDocuments(supabase: Client, userId: string): Promise<number> {
   const { data: docs, error } = await supabase
     .from("medical_documents")
-    .select("id, file_name, file_path, file_type, title, category")
+    .select("id, file_name, file_path, file_type, category")
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(25);
@@ -219,8 +219,8 @@ export async function indexPendingDocuments(supabase: Client, userId: string): P
         vectors.push(...(await embed(chunks.slice(i, i + EMBED_BATCH))));
       }
 
-      const docRecord = doc as typeof doc & { title?: string | null; category?: string | null };
-      const title = (docRecord.title || doc.file_name) as string;
+      const docRecord = doc as typeof doc & { category?: string | null };
+      const title = doc.file_name;
 
       const rows = chunks.map((content, i) => {
         const metadata: ChunkMetadata = {
