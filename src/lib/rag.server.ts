@@ -219,8 +219,8 @@ export async function indexPendingDocuments(supabase: Client, userId: string): P
         vectors.push(...(await embed(chunks.slice(i, i + EMBED_BATCH))));
       }
 
-      const docRecord = doc as typeof doc & { title?: string | null; category?: string | null };
-      const title = (docRecord.title || doc.file_name) as string;
+      const docRecord = doc as typeof doc & { category?: string | null };
+      const title = doc.file_name;
 
       const rows = chunks.map((content, i) => {
         const metadata: ChunkMetadata = {
