@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Plus, Trash2, Loader2 } from "lucide-react";
+import { Calendar, Plus, Trash2, Loader2, Stethoscope } from "lucide-react";
+import { VisitPrepDialog } from "@/components/dashboard/VisitPrepDialog";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function AppointmentsPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [prepId, setPrepId] = useState<string | null>(null);
 
   const { data: appts, isLoading } = useQuery({
     queryKey: ["appointments-all"],
@@ -160,7 +162,7 @@ function AppointmentsPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="w-12" />
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -172,7 +174,14 @@ function AppointmentsPage() {
                       <TableCell>{a.appointment_time ?? "—"}</TableCell>
                       <TableCell><Badge variant={displayStatus(a) === "upcoming" ? "default" : "secondary"}>{displayStatus(a)}</Badge></TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
+                        <div className="flex items-center justify-end gap-1">
+                          {displayStatus(a) === "upcoming" && (
+                            <Button variant="outline" size="sm" onClick={() => setPrepId(a.id)}>
+                              <Stethoscope className="mr-2 h-4 w-4" /> Prepare for Doctor Visit
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(a.id)} aria-label="Delete"><Trash2 className="h-4 w-4 text-muted-foreground" /></Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -181,6 +190,7 @@ function AppointmentsPage() {
             </CardContent>
           </Card>
         )}
+        <VisitPrepDialog appointmentId={prepId} open={prepId !== null} onOpenChange={(v) => !v && setPrepId(null)} />
       </div>
     </DashboardLayout>
   );
