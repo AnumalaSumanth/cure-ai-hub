@@ -162,7 +162,7 @@ function AppointmentsPage() {
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="w-12" />
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -190,6 +190,7 @@ function AppointmentsPage() {
             </CardContent>
           </Card>
         )}
+        <VisitPrepDialog appointmentId={prepId} open={prepId !== null} onOpenChange={(v) => !v && setPrepId(null)} />
       </div>
     </DashboardLayout>
   );
