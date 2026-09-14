@@ -19,7 +19,7 @@ export const appointmentTool: AgentTool = {
   name: "appointment_assistance",
   description: "List the user's upcoming appointments or create one from details they provide.",
   inputSchema: z.object({
-    action: z.enum(["list", "create"]).default("list"),
+    action: z.enum(["list", "create", "prepare"]).default("list"),
     doctor_name: z.string().max(120).optional(),
     appointment_date: z.string().max(40).optional(),
     appointment_time: z.string().max(40).optional(),
@@ -28,13 +28,40 @@ export const appointmentTool: AgentTool = {
   }),
   async execute(args, ctx) {
     const a = args as {
-      action?: "list" | "create";
+      action?: "list" | "create" | "prepare";
       doctor_name?: string;
       appointment_date?: string;
       appointment_time?: string;
       hospital_name?: string;
       notes?: string;
     };
+
+    if (a.action === "prepare") {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: next } = await ctx.supabase
+        .from("appointments")
+        .select("id, appointment_date")
+        .eq("user_id", ctx.userId)
+        .gte("appointment_date", a.appointment_date ? parseDate(a.appointment_date) ?? today : today)
+        .order("appointment_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (!next) {
+        return {
+          ok: true,
+          content:
+            "I couldn't find an upcoming appointment to prepare for. Add the appointment first and I'll organise your saved information for it.",
+        };
+      }
+      try {
+        const { buildVisitPrep, visitPrepToMarkdown } = await import("@/lib/visit-prep.server");
+        const prep = await buildVisitPrep(ctx.supabase, ctx.userId, next.id);
+        return { ok: true, content: visitPrepToMarkdown(prep), sources: ["Your saved records"] };
+      } catch (err) {
+        console.error("[agent:appointment] prepare failed", (err as Error)?.message);
+        return { ok: false, content: "I couldn't build your visit preparation right now. Please try again." };
+      }
+    }
 
     if ((a.action ?? "list") === "create") {
       const doctor = a.doctor_name?.trim();

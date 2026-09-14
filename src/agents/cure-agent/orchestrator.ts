@@ -55,9 +55,10 @@ export function buildArgs(tool: string, message: string, history: AgentMessage[]
       };
     }
     case "appointment_assistance": {
+      const prepare = /\b(prepare|preparation|get me ready|what should i ask)\b/i.test(message);
       const create = /\b(book|schedule|add|create|save)\b/i.test(message);
       return {
-        action: create ? "create" : "list",
+        action: prepare ? "prepare" : create ? "create" : "list",
         doctor_name: message.match(/\b(?:dr\.?|doctor)\s+([a-z][a-z .'-]{1,40})/i)?.[1]?.trim(),
         appointment_date: message.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}[/-]\d{1,2}[/-]\d{4})\b/)?.[0],
         appointment_time: message.match(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/i)?.[0],
