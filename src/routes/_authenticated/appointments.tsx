@@ -86,11 +86,8 @@ function AppointmentsPage() {
     qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
   }
 
-  function displayStatus(a: { status: string; appointment_date: string; appointment_time: string | null }) {
-    if (a.status === "cancelled") return "cancelled";
-    const at = new Date(`${a.appointment_date}T${a.appointment_time ?? "23:59"}`).getTime();
-    return at < Date.now() ? "completed" : "upcoming";
-  }
+  // Status is derived from date/time; the stored status column can go stale.
+
 
 
   return (
