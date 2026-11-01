@@ -38,7 +38,7 @@ function useDashboardData() {
     queryKey: ["dashboard-overview"],
     queryFn: async () => {
       const since = new Date(Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000).toISOString();
-      const [tipsRes, medsRes, apptsRes, recsRes, upcomingRes] = await Promise.all([
+      const [tipsRes, medsRes, apptsRes, recsRes] = await Promise.all([
         supabase
           .from("tips")
           .select("id,title,category,status,is_featured,ai_summary,created_at,updated_at")
@@ -46,18 +46,20 @@ function useDashboardData() {
         supabase.from("medicines").select("id,medicine_name,created_at").order("created_at", { ascending: false }),
         supabase.from("appointments").select("id,doctor_name,hospital_name,appointment_date,appointment_time,status,created_at").order("created_at", { ascending: false }),
         supabase.from("health_records").select("id,title,uploaded_at").order("uploaded_at", { ascending: false }),
-        supabase
-          .from("appointments")
-          .select("id,doctor_name,hospital_name,appointment_date,appointment_time")
-          .eq("status", "upcoming")
-          .order("appointment_date", { ascending: true })
-          .limit(5),
       ]);
       if (tipsRes.error) throw tipsRes.error;
       const tips = tipsRes.data ?? [];
       const meds = medsRes.data ?? [];
       const appts = apptsRes.data ?? [];
       const recs = recsRes.data ?? [];
+
+      // Upcoming is derived from date/time, not the stored status column,
+      // which can stay "upcoming" after an appointment has passed.
+      const upcomingAppointments = appts
+        .filter(isUpcomingAppointment)
+        .sort((a, b) => appointmentSortKey(a).localeCompare(appointmentSortKey(b)))
+        .slice(0, 5);
+      const upcomingCount = appts.filter(isUpcomingAppointment).length;
 
       const recentTips = tips.filter((t) => t.created_at >= since).length;
       const aiGenerated = tips.filter((t) => t.ai_summary && t.ai_summary.trim().length > 0).length;
@@ -116,14 +118,14 @@ function useDashboardData() {
           featured,
           published,
           medicines: meds.length,
-          appointments: (upcomingRes.data ?? []).length,
+          appointments: upcomingCount,
           records: recs.length,
         },
         recentTips: tips
           .slice()
           .sort((a, b) => b.created_at.localeCompare(a.created_at))
           .slice(0, 5),
-        upcoming: upcomingRes.data ?? [],
+        upcoming: upcomingAppointments,
         activity: activity.slice(0, 8),
       };
     },
