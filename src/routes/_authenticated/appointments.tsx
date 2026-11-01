@@ -73,7 +73,7 @@ function AppointmentsPage() {
     toast.success("Appointment added");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["appointments-all"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-overview"] });
     qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
   }
 
@@ -164,16 +164,18 @@ function AppointmentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {appts.map((a) => (
+                  {appts.map((a) => {
+                    const status = appointmentStatus(a);
+                    return (
                     <TableRow key={a.id}>
                       <TableCell className="font-medium">{a.doctor_name}</TableCell>
                       <TableCell className="text-muted-foreground">{a.hospital_name ?? "—"}</TableCell>
                       <TableCell>{a.appointment_date}</TableCell>
                       <TableCell>{a.appointment_time ?? "—"}</TableCell>
-                      <TableCell><Badge variant={displayStatus(a) === "upcoming" ? "default" : "secondary"}>{displayStatus(a)}</Badge></TableCell>
+                      <TableCell><Badge variant={status === "upcoming" ? "default" : "secondary"}>{status}</Badge></TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          {displayStatus(a) === "upcoming" && (
+                          {status === "upcoming" && (
                             <Button variant="outline" size="sm" onClick={() => setPrepId(a.id)}>
                               <Stethoscope className="mr-2 h-4 w-4" /> Prepare for Doctor Visit
                             </Button>
@@ -182,7 +184,8 @@ function AppointmentsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
