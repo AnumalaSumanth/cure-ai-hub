@@ -82,7 +82,7 @@ function HealthTimelinePage() {
           category: "appointments",
           title: `Appointment with ${a.doctor_name}`,
           description: a.hospital_name ?? "Doctor visit",
-          status: a.status,
+          status: appointmentStatus(a),
           to: "/appointments",
         });
       }

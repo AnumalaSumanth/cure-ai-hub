@@ -119,12 +119,13 @@ export const appointmentTool: AgentTool = {
       };
     }
     const list = data
-      .map(
-        (r) =>
-          `- **${r.doctor_name}**${r.hospital_name ? ` (${r.hospital_name})` : ""} — ${r.appointment_date}${
-            r.appointment_time ? ` at ${r.appointment_time}` : ""
-          } · ${r.status}`,
-      )
+      .map((r) => {
+        // Status derived from date/time; the stored column can go stale.
+        const status = appointmentStatus(r);
+        return `- **${r.doctor_name}**${r.hospital_name ? ` (${r.hospital_name})` : ""} — ${r.appointment_date}${
+          r.appointment_time ? ` at ${r.appointment_time}` : ""
+        } · ${status}`;
+      })
       .join("\n");
     return { ok: true, content: `Here are your upcoming appointments:\n\n${list}` };
   },

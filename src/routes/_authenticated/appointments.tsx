@@ -82,7 +82,7 @@ function AppointmentsPage() {
     if (error) return toast.error(error.message);
     toast.success("Removed");
     qc.invalidateQueries({ queryKey: ["appointments-all"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-overview"] });
     qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
   }
 
