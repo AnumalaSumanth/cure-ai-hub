@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/hooks/use-user";
+import { appointmentStatus } from "@/lib/appointment-status";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/appointments")({
@@ -72,7 +73,7 @@ function AppointmentsPage() {
     toast.success("Appointment added");
     setOpen(false);
     qc.invalidateQueries({ queryKey: ["appointments-all"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-overview"] });
     qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
   }
 
@@ -81,15 +82,12 @@ function AppointmentsPage() {
     if (error) return toast.error(error.message);
     toast.success("Removed");
     qc.invalidateQueries({ queryKey: ["appointments-all"] });
-    qc.invalidateQueries({ queryKey: ["dashboard-counts"] });
+    qc.invalidateQueries({ queryKey: ["dashboard-overview"] });
     qc.invalidateQueries({ queryKey: ["upcoming-appointments"] });
   }
 
-  function displayStatus(a: { status: string; appointment_date: string; appointment_time: string | null }) {
-    if (a.status === "cancelled") return "cancelled";
-    const at = new Date(`${a.appointment_date}T${a.appointment_time ?? "23:59"}`).getTime();
-    return at < Date.now() ? "completed" : "upcoming";
-  }
+  // Status is derived from date/time; the stored status column can go stale.
+
 
 
   return (
@@ -166,16 +164,18 @@ function AppointmentsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {appts.map((a) => (
+                  {appts.map((a) => {
+                    const status = appointmentStatus(a);
+                    return (
                     <TableRow key={a.id}>
                       <TableCell className="font-medium">{a.doctor_name}</TableCell>
                       <TableCell className="text-muted-foreground">{a.hospital_name ?? "—"}</TableCell>
                       <TableCell>{a.appointment_date}</TableCell>
                       <TableCell>{a.appointment_time ?? "—"}</TableCell>
-                      <TableCell><Badge variant={displayStatus(a) === "upcoming" ? "default" : "secondary"}>{displayStatus(a)}</Badge></TableCell>
+                      <TableCell><Badge variant={status === "upcoming" ? "default" : "secondary"}>{status}</Badge></TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-1">
-                          {displayStatus(a) === "upcoming" && (
+                          {status === "upcoming" && (
                             <Button variant="outline" size="sm" onClick={() => setPrepId(a.id)}>
                               <Stethoscope className="mr-2 h-4 w-4" /> Prepare for Doctor Visit
                             </Button>
@@ -184,7 +184,8 @@ function AppointmentsPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>

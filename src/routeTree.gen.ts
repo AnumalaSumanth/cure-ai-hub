@@ -9,35 +9,34 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
-import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
-import { Route as AuthenticatedImageAnalysisRouteImport } from './routes/_authenticated/image-analysis'
-import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
-import { Route as AuthenticatedHealthTimelineRouteImport } from './routes/_authenticated/health-timeline'
-import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedAgentRouteImport } from './routes/_authenticated/agent'
+import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
+import { Route as AuthenticatedHealthTimelineRouteImport } from './routes/_authenticated/health-timeline'
+import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
+import { Route as AuthenticatedImageAnalysisRouteImport } from './routes/_authenticated/image-analysis'
+import { Route as AuthenticatedMedicinesRouteImport } from './routes/_authenticated/medicines'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedHealthTipsIndexRouteImport } from './routes/_authenticated/health-tips.index'
-import { Route as AuthenticatedHealthTipsNewRouteImport } from './routes/_authenticated/health-tips.new'
 import { Route as AuthenticatedHealthTipsIdRouteImport } from './routes/_authenticated/health-tips.$id'
-import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
+import { Route as AuthenticatedHealthTipsNewRouteImport } from './routes/_authenticated/health-tips.new'
 import { Route as AuthenticatedHealthTipsIdEditRouteImport } from './routes/_authenticated/health-tips.$id.edit'
+import { Route as ApiPublicHooksAppointmentRemindersRouteImport } from './routes/api/public/hooks/appointment-reminders'
 
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -45,56 +44,19 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedMedicinesRoute = AuthenticatedMedicinesRouteImport.update({
-  id: '/medicines',
-  path: '/medicines',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedImageAnalysisRoute =
-  AuthenticatedImageAnalysisRouteImport.update({
-    id: '/image-analysis',
-    path: '/image-analysis',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHealthTipsRoute = AuthenticatedHealthTipsRouteImport.update({
-  id: '/health-tips',
-  path: '/health-tips',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedHealthTimelineRoute =
-  AuthenticatedHealthTimelineRouteImport.update({
-    id: '/health-timeline',
-    path: '/health-timeline',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedHealthRecordsRoute =
-  AuthenticatedHealthRecordsRouteImport.update({
-    id: '/health-records',
-    path: '/health-records',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedAgentRoute = AuthenticatedAgentRouteImport.update({
+  id: '/agent',
+  path: '/agent',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAppointmentsRoute =
@@ -103,9 +65,47 @@ const AuthenticatedAppointmentsRoute =
     path: '/appointments',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedAgentRoute = AuthenticatedAgentRouteImport.update({
-  id: '/agent',
-  path: '/agent',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedHealthRecordsRoute =
+  AuthenticatedHealthRecordsRouteImport.update({
+    id: '/health-records',
+    path: '/health-records',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHealthTimelineRoute =
+  AuthenticatedHealthTimelineRouteImport.update({
+    id: '/health-timeline',
+    path: '/health-timeline',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedHealthTipsRoute = AuthenticatedHealthTipsRouteImport.update({
+  id: '/health-tips',
+  path: '/health-tips',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedImageAnalysisRoute =
+  AuthenticatedImageAnalysisRouteImport.update({
+    id: '/image-analysis',
+    path: '/image-analysis',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMedicinesRoute = AuthenticatedMedicinesRouteImport.update({
+  id: '/medicines',
+  path: '/medicines',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHealthTipsIndexRoute =
@@ -114,29 +114,29 @@ const AuthenticatedHealthTipsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedHealthTipsRoute,
   } as any)
-const AuthenticatedHealthTipsNewRoute =
-  AuthenticatedHealthTipsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedHealthTipsRoute,
-  } as any)
 const AuthenticatedHealthTipsIdRoute =
   AuthenticatedHealthTipsIdRouteImport.update({
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedHealthTipsRoute,
   } as any)
-const ApiPublicHooksAppointmentRemindersRoute =
-  ApiPublicHooksAppointmentRemindersRouteImport.update({
-    id: '/api/public/hooks/appointment-reminders',
-    path: '/api/public/hooks/appointment-reminders',
-    getParentRoute: () => rootRouteImport,
+const AuthenticatedHealthTipsNewRoute =
+  AuthenticatedHealthTipsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedHealthTipsRoute,
   } as any)
 const AuthenticatedHealthTipsIdEditRoute =
   AuthenticatedHealthTipsIdEditRouteImport.update({
     id: '/edit',
     path: '/edit',
     getParentRoute: () => AuthenticatedHealthTipsIdRoute,
+  } as any)
+const ApiPublicHooksAppointmentRemindersRoute =
+  ApiPublicHooksAppointmentRemindersRouteImport.update({
+    id: '/api/public/hooks/appointment-reminders',
+    path: '/api/public/hooks/appointment-reminders',
+    getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -280,25 +280,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -308,67 +294,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/profile': {
-      id: '/_authenticated/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof AuthenticatedProfileRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/medicines': {
-      id: '/_authenticated/medicines'
-      path: '/medicines'
-      fullPath: '/medicines'
-      preLoaderRoute: typeof AuthenticatedMedicinesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/image-analysis': {
-      id: '/_authenticated/image-analysis'
-      path: '/image-analysis'
-      fullPath: '/image-analysis'
-      preLoaderRoute: typeof AuthenticatedImageAnalysisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/health-tips': {
-      id: '/_authenticated/health-tips'
-      path: '/health-tips'
-      fullPath: '/health-tips'
-      preLoaderRoute: typeof AuthenticatedHealthTipsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/health-timeline': {
-      id: '/_authenticated/health-timeline'
-      path: '/health-timeline'
-      fullPath: '/health-timeline'
-      preLoaderRoute: typeof AuthenticatedHealthTimelineRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/health-records': {
-      id: '/_authenticated/health-records'
-      path: '/health-records'
-      fullPath: '/health-records'
-      preLoaderRoute: typeof AuthenticatedHealthRecordsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/agent': {
+      id: '/_authenticated/agent'
+      path: '/agent'
+      fullPath: '/agent'
+      preLoaderRoute: typeof AuthenticatedAgentRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/appointments': {
@@ -378,11 +329,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppointmentsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/agent': {
-      id: '/_authenticated/agent'
-      path: '/agent'
-      fullPath: '/agent'
-      preLoaderRoute: typeof AuthenticatedAgentRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/health-records': {
+      id: '/_authenticated/health-records'
+      path: '/health-records'
+      fullPath: '/health-records'
+      preLoaderRoute: typeof AuthenticatedHealthRecordsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/health-timeline': {
+      id: '/_authenticated/health-timeline'
+      path: '/health-timeline'
+      fullPath: '/health-timeline'
+      preLoaderRoute: typeof AuthenticatedHealthTimelineRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/health-tips': {
+      id: '/_authenticated/health-tips'
+      path: '/health-tips'
+      fullPath: '/health-tips'
+      preLoaderRoute: typeof AuthenticatedHealthTipsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/image-analysis': {
+      id: '/_authenticated/image-analysis'
+      path: '/image-analysis'
+      fullPath: '/image-analysis'
+      preLoaderRoute: typeof AuthenticatedImageAnalysisRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/medicines': {
+      id: '/_authenticated/medicines'
+      path: '/medicines'
+      fullPath: '/medicines'
+      preLoaderRoute: typeof AuthenticatedMedicinesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/health-tips/': {
@@ -392,13 +392,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHealthTipsIndexRouteImport
       parentRoute: typeof AuthenticatedHealthTipsRoute
     }
-    '/_authenticated/health-tips/new': {
-      id: '/_authenticated/health-tips/new'
-      path: '/new'
-      fullPath: '/health-tips/new'
-      preLoaderRoute: typeof AuthenticatedHealthTipsNewRouteImport
-      parentRoute: typeof AuthenticatedHealthTipsRoute
-    }
     '/_authenticated/health-tips/$id': {
       id: '/_authenticated/health-tips/$id'
       path: '/$id'
@@ -406,12 +399,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedHealthTipsIdRouteImport
       parentRoute: typeof AuthenticatedHealthTipsRoute
     }
-    '/api/public/hooks/appointment-reminders': {
-      id: '/api/public/hooks/appointment-reminders'
-      path: '/api/public/hooks/appointment-reminders'
-      fullPath: '/api/public/hooks/appointment-reminders'
-      preLoaderRoute: typeof ApiPublicHooksAppointmentRemindersRouteImport
-      parentRoute: typeof rootRouteImport
+    '/_authenticated/health-tips/new': {
+      id: '/_authenticated/health-tips/new'
+      path: '/new'
+      fullPath: '/health-tips/new'
+      preLoaderRoute: typeof AuthenticatedHealthTipsNewRouteImport
+      parentRoute: typeof AuthenticatedHealthTipsRoute
     }
     '/_authenticated/health-tips/$id/edit': {
       id: '/_authenticated/health-tips/$id/edit'
@@ -419,6 +412,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/health-tips/$id/edit'
       preLoaderRoute: typeof AuthenticatedHealthTipsIdEditRouteImport
       parentRoute: typeof AuthenticatedHealthTipsIdRoute
+    }
+    '/api/public/hooks/appointment-reminders': {
+      id: '/api/public/hooks/appointment-reminders'
+      path: '/api/public/hooks/appointment-reminders'
+      fullPath: '/api/public/hooks/appointment-reminders'
+      preLoaderRoute: typeof ApiPublicHooksAppointmentRemindersRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
