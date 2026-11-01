@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
+import { appointmentStatus } from "@/lib/appointment-status";
 
 export const Route = createFileRoute("/_authenticated/health-timeline")({
   head: () => ({

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { appointmentStatus } from "@/lib/appointment-status";
 import type { AgentTool } from "../types";
 
 function parseDate(input: string): string | null {
