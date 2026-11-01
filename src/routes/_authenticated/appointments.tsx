@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/hooks/use-user";
+import { appointmentStatus } from "@/lib/appointment-status";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/appointments")({
