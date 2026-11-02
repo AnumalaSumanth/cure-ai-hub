@@ -109,6 +109,27 @@ export type Database = {
           },
         ]
       }
+      health_insights: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_record_analyses: {
         Row: {
           abnormal: Json
