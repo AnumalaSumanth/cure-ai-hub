@@ -162,7 +162,7 @@ function HealthInsightsPage() {
                 <p>{insights.disclaimer}</p>
                 <p>
                   You can also ask the{" "}
-                  <Link to="/agent" className="font-medium text-primary underline-offset-2 hover:underline">
+                  <Link to="/agent" search={{ q: "Analyse my recent health information" }} className="font-medium text-primary underline-offset-2 hover:underline">
                     Cure AI Agent
                   </Link>{" "}
                   things like "Analyse my recent health information" and follow-up questions about these insights.
