@@ -69,7 +69,7 @@ describe("intent router", () => {
   });
   it("still routes specific reports to report analysis", () => {
     expect(classifyIntent("Analyze my blood report")).toBe("REPORT_ANALYSIS");
-    expect(classifyIntent("Summarize my health record results")).toBe("REPORT_ANALYSIS");
+    expect(classifyIntent("Interpret my lab results")).toBe("REPORT_ANALYSIS");
   });
   it("marks unrelated requests unsupported", () => {
     expect(classifyIntent("Write me a poem about bitcoin")).toBe("UNSUPPORTED");
