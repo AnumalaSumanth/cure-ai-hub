@@ -62,6 +62,15 @@ describe("intent router", () => {
   it("routes appointments", () => {
     expect(classifyIntent("Show my appointments")).toBe("APPOINTMENT");
   });
+  it("routes health insight requests", () => {
+    expect(classifyIntent("Analyze my recent health information.")).toBe("HEALTH_INSIGHTS");
+    expect(classifyIntent("Give me my health insights")).toBe("HEALTH_INSIGHTS");
+    expect(toolForIntent("HEALTH_INSIGHTS")).toBe("analyze_health_information");
+  });
+  it("still routes specific reports to report analysis", () => {
+    expect(classifyIntent("Analyze my blood report")).toBe("REPORT_ANALYSIS");
+    expect(classifyIntent("Interpret my lab results")).toBe("REPORT_ANALYSIS");
+  });
   it("marks unrelated requests unsupported", () => {
     expect(classifyIntent("Write me a poem about bitcoin")).toBe("UNSUPPORTED");
     expect(toolForIntent("UNSUPPORTED")).toBeNull();

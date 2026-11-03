@@ -22,6 +22,7 @@ import { medicalKnowledgeTool } from "./tools/medical-knowledge-tool";
 import { reportTool } from "./tools/report-tool";
 import { reminderTool } from "./tools/reminder-tool";
 import { appointmentTool } from "./tools/appointment-tool";
+import { healthInsightsTool } from "./tools/health-insights-tool";
 
 const TOOLS: Record<string, AgentTool> = {
   [symptomTool.name]: symptomTool,
@@ -29,6 +30,7 @@ const TOOLS: Record<string, AgentTool> = {
   [reportTool.name]: reportTool,
   [reminderTool.name]: reminderTool,
   [appointmentTool.name]: appointmentTool,
+  [healthInsightsTool.name]: healthInsightsTool,
 };
 
 /** Deterministic argument extraction — model output is never trusted directly. */
@@ -43,6 +45,13 @@ export function buildArgs(tool: string, message: string, history: AgentMessage[]
       return { query: message.slice(0, 1000) };
     case "analyze_health_report":
       return { query: message.slice(0, 1000) };
+    case "analyze_health_information":
+      return {
+        refresh: /\b(again|regenerate|re-?run|fresh|new insights|update|latest)\b/i.test(message)
+          ? "regenerate"
+          : "auto",
+        topic: message.slice(0, 500),
+      };
     case "create_medicine_reminder": {
       const time = message.match(/\b\d{1,2}(:\d{2})?\s*(am|pm)\b/i)?.[0] ?? message.match(/\b([01]?\d|2[0-3]):[0-5]\d\b/)?.[0];
       const name =

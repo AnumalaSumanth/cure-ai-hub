@@ -14,6 +14,7 @@ import {
   Camera,
   Bot,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,6 +46,7 @@ const items = [
   { title: "Appointments", url: "/appointments", icon: Calendar },
   { title: "Health Records", url: "/health-records", icon: FileText },
   { title: "Health Timeline", url: "/health-timeline", icon: Activity },
+  { title: "Health Insights", url: "/health-insights", icon: Sparkles },
   { title: "Health Tips", url: "/health-tips", icon: Lightbulb },
   { title: "Image Analysis", url: "/image-analysis", icon: Camera },
   { title: "Settings", url: "/settings", icon: Settings },

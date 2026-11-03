@@ -17,6 +17,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthenticatedAgentRouteImport } from './routes/_authenticated/agent'
 import { Route as AuthenticatedAppointmentsRouteImport } from './routes/_authenticated/appointments'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedHealthInsightsRouteImport } from './routes/_authenticated/health-insights'
 import { Route as AuthenticatedHealthRecordsRouteImport } from './routes/_authenticated/health-records'
 import { Route as AuthenticatedHealthTimelineRouteImport } from './routes/_authenticated/health-timeline'
 import { Route as AuthenticatedHealthTipsRouteImport } from './routes/_authenticated/health-tips'
@@ -70,6 +71,12 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHealthInsightsRoute =
+  AuthenticatedHealthInsightsRouteImport.update({
+    id: '/health-insights',
+    path: '/health-insights',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedHealthRecordsRoute =
   AuthenticatedHealthRecordsRouteImport.update({
     id: '/health-records',
@@ -147,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/agent': typeof AuthenticatedAgentRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/health-insights': typeof AuthenticatedHealthInsightsRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
   '/health-timeline': typeof AuthenticatedHealthTimelineRoute
   '/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
@@ -168,6 +176,7 @@ export interface FileRoutesByTo {
   '/agent': typeof AuthenticatedAgentRoute
   '/appointments': typeof AuthenticatedAppointmentsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/health-insights': typeof AuthenticatedHealthInsightsRoute
   '/health-records': typeof AuthenticatedHealthRecordsRoute
   '/health-timeline': typeof AuthenticatedHealthTimelineRoute
   '/image-analysis': typeof AuthenticatedImageAnalysisRoute
@@ -190,6 +199,7 @@ export interface FileRoutesById {
   '/_authenticated/agent': typeof AuthenticatedAgentRoute
   '/_authenticated/appointments': typeof AuthenticatedAppointmentsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/health-insights': typeof AuthenticatedHealthInsightsRoute
   '/_authenticated/health-records': typeof AuthenticatedHealthRecordsRoute
   '/_authenticated/health-timeline': typeof AuthenticatedHealthTimelineRoute
   '/_authenticated/health-tips': typeof AuthenticatedHealthTipsRouteWithChildren
@@ -213,6 +223,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/appointments'
     | '/dashboard'
+    | '/health-insights'
     | '/health-records'
     | '/health-timeline'
     | '/health-tips'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/agent'
     | '/appointments'
     | '/dashboard'
+    | '/health-insights'
     | '/health-records'
     | '/health-timeline'
     | '/image-analysis'
@@ -255,6 +267,7 @@ export interface FileRouteTypes {
     | '/_authenticated/agent'
     | '/_authenticated/appointments'
     | '/_authenticated/dashboard'
+    | '/_authenticated/health-insights'
     | '/_authenticated/health-records'
     | '/_authenticated/health-timeline'
     | '/_authenticated/health-tips'
@@ -334,6 +347,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/health-insights': {
+      id: '/_authenticated/health-insights'
+      path: '/health-insights'
+      fullPath: '/health-insights'
+      preLoaderRoute: typeof AuthenticatedHealthInsightsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/health-records': {
@@ -459,6 +479,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAgentRoute: typeof AuthenticatedAgentRoute
   AuthenticatedAppointmentsRoute: typeof AuthenticatedAppointmentsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHealthInsightsRoute: typeof AuthenticatedHealthInsightsRoute
   AuthenticatedHealthRecordsRoute: typeof AuthenticatedHealthRecordsRoute
   AuthenticatedHealthTimelineRoute: typeof AuthenticatedHealthTimelineRoute
   AuthenticatedHealthTipsRoute: typeof AuthenticatedHealthTipsRouteWithChildren
@@ -472,6 +493,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAgentRoute: AuthenticatedAgentRoute,
   AuthenticatedAppointmentsRoute: AuthenticatedAppointmentsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHealthInsightsRoute: AuthenticatedHealthInsightsRoute,
   AuthenticatedHealthRecordsRoute: AuthenticatedHealthRecordsRoute,
   AuthenticatedHealthTimelineRoute: AuthenticatedHealthTimelineRoute,
   AuthenticatedHealthTipsRoute: AuthenticatedHealthTipsRouteWithChildren,

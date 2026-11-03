@@ -24,6 +24,15 @@ const RULES: { intent: AgentIntent; patterns: RegExp[] }[] = [
     ],
   },
   {
+    intent: "HEALTH_INSIGHTS",
+    patterns: [
+      /\bhealth insights?\b/i,
+      /\b(analy[sz]e|review|summar(y|ize|ise)|overview)\b[^.?!]{0,40}\bhealth\b/i,
+      /\binsights?\b[^.?!]{0,20}\b(health|medication)\b/i,
+      /\bhow (have|has) my health\b/i,
+    ],
+  },
+  {
     intent: "APPOINTMENT",
     patterns: [
       /\bappointments?\b/i,
@@ -74,6 +83,8 @@ export function toolForIntent(intent: AgentIntent): string | null {
       return "search_medical_knowledge";
     case "REPORT_ANALYSIS":
       return "analyze_health_report";
+    case "HEALTH_INSIGHTS":
+      return "analyze_health_information";
     case "MEDICINE_REMINDER":
       return "create_medicine_reminder";
     case "APPOINTMENT":

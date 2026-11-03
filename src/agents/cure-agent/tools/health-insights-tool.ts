@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { AgentTool } from "../types";
 import { AGENT_DISCLAIMER } from "../safety";
+import type { InsightItem, HealthInsights } from "@/lib/health-insights.server";
 
 /**
  * AI Health Insights for the agent. Read-only: organises the user's own saved
@@ -27,11 +28,11 @@ export const healthInsightsTool: AgentTool = {
         .limit(1)
         .maybeSingle();
       if (saved?.payload) {
-        const { healthInsightsToMarkdown, type HealthInsights } = await import("@/lib/health-insights.server");
+        const mod = await import("@/lib/health-insights.server");
         const insights = saved.payload as HealthInsights;
         return {
           ok: true,
-          content: `${healthInsightsToMarkdown(insights)}\n\n_This is your latest saved summary (generated ${new Date(insights.generated_at).toLocaleString()}). Say "regenerate insights" for a fresh one._`,
+          content: `${mod.healthInsightsToMarkdown(insights)}\n\n_This is your latest saved summary (generated ${new Date(insights.generated_at).toLocaleString()}). Say "regenerate insights" for a fresh one._`,
           sources: ["Your saved health information"],
           data: { generated_at: insights.generated_at },
         };
@@ -39,19 +40,23 @@ export const healthInsightsTool: AgentTool = {
     }
 
     try {
-      const { buildHealthInsights, healthInsightsToMarkdown } = await import("@/lib/health-insights.server");
-      const insights = await buildHealthInsights(ctx.supabase, ctx.userId);
+      const mod = await import("@/lib/health-insights.server");
+      const insights = await mod.buildHealthInsights(ctx.supabase, ctx.userId);
       await ctx.supabase.from("health_insights").insert({ user_id: ctx.userId, payload: insights });
-      let content = healthInsightsToMarkdown(insights);
+
+      const section = (items: InsightItem[]) =>
+        items.length
+          ? items.map((i) => `- **${i.title}** — ${i.explanation}${i.source ? ` _(Source: ${i.source})_` : ""}`).join("\n")
+          : "Not enough information available.";
+
+      let content = mod.healthInsightsToMarkdown(insights);
       const topic = (a.topic ?? "").toLowerCase();
-      const sectionFor = (re: RegExp, items: typeof insights.record_observations) =>
-        items.length ? items.map((i) => `- **${i.title}** — ${i.explanation}${i.source ? ` _(Source: ${i.source})_` : ""}`).join("\n") : "Not enough information available.";
       if (/\b(medicine|medication|adherence|dose)\b/.test(topic)) {
-        content = `### Medication Activity\n${sectionFor(/./, insights.medication_activity)}\n\n_${insights.disclaimer}_`;
+        content = `### Medication Activity\n${section(insights.medication_activity)}\n\n_${insights.disclaimer}_`;
       } else if (/\b(document|library|upload)\b/.test(topic)) {
-        content = `### Document-Supported Insights\n${sectionFor(/./, insights.document_insights)}\n\n_${insights.disclaimer}_`;
+        content = `### Document-Supported Insights\n${section(insights.document_insights)}\n\n_${insights.disclaimer}_`;
       } else if (/\b(appointment|activity|timeline)\b/.test(topic)) {
-        content = `### Health Activity\n${sectionFor(/./, insights.health_activity)}\n\n_${insights.disclaimer}_`;
+        content = `### Health Activity\n${section(insights.health_activity)}\n\n_${insights.disclaimer}_`;
       }
       return { ok: true, content, sources: ["Your saved health information"] };
     } catch (err) {
