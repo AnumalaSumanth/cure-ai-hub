@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { withAiFallback, MEDICAL_SAFETY_SYSTEM } from "./ai-provider.server";
 import { retrieveGrounding, GROUNDING_RULES, type Grounding } from "./rag.server";
+import { buildHealthTrends, type HealthTrend, type SavedTrendAnalysis } from "./health-trends";
 
 /**
  * AI Health Insights. Read-only: organises the signed-in user's own health
@@ -41,6 +42,7 @@ export type HealthInsights = {
   medication_activity: InsightItem[];
   health_activity: InsightItem[];
   document_insights: InsightItem[];
+  health_trends: HealthTrend[];
   disclaimer: string;
 };
 
@@ -113,6 +115,10 @@ const AiSchema = z.object({
   medication_activity: z.array(ItemSchema).max(6).catch([]),
   health_activity: z.array(ItemSchema).max(6).catch([]),
   document_insights: z.array(ItemSchema).max(6).catch([]),
+  health_trend_observations: z.array(z.object({
+    key: z.string().max(300),
+    observation: z.enum(["increased", "decreased", "stable", "insufficient"]),
+  })).max(40).catch([]),
 });
 
 // ---------- Data gathering (read-only, RLS-scoped) ----------
@@ -169,6 +175,41 @@ async function gatherData(supabase: SupabaseClient<Database>, userId: string): P
     appointments: (appointments.data ?? []) as Gathered["appointments"],
     today,
   };
+}
+
+/** Saved record analyses and their owner-scoped source records, for historical lab trends. */
+export async function loadHealthTrends(supabase: SupabaseClient<Database>, userId: string): Promise<HealthTrend[]> {
+  const { data: analyses, error: analysisError } = await supabase
+    .from("health_record_analyses")
+    .select("record_id, values")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(120);
+
+  if (analysisError) {
+    console.error("[insights] trend analysis load failed:", analysisError.message);
+    return [];
+  }
+
+  const analysisRows = (analyses ?? []) as Pick<SavedTrendAnalysis, "record_id" | "values">[];
+  const recordIds = [...new Set(analysisRows.map((row) => row.record_id))];
+  if (!recordIds.length) return [];
+
+  const { data: records, error: recordsError } = await supabase
+    .from("health_records")
+    .select("id, title, file_name, record_date")
+    .eq("user_id", userId)
+    .in("id", recordIds);
+
+  if (recordsError) {
+    console.error("[insights] trend record load failed:", recordsError.message);
+    return [];
+  }
+
+  const recordsById = new Map((records ?? []).map((record) => [record.id, record]));
+  return buildHealthTrends(
+    analysisRows.map((row) => ({ ...row, record: recordsById.get(row.record_id) ?? null })),
+  );
 }
 
 function doseCounts(doses: Gathered["doses"]): { taken: number; missed: number; skipped: number; upcoming: number } {
@@ -282,7 +323,10 @@ export async function buildHealthInsights(
   supabase: SupabaseClient<Database>,
   userId: string,
 ): Promise<HealthInsights> {
-  const d = await gatherData(supabase, userId);
+  const [d, healthTrends] = await Promise.all([
+    gatherData(supabase, userId),
+    loadHealthTrends(supabase, userId),
+  ]);
 
   // Hybrid RAG over the user's own uploaded documents (existing layer).
   const ragQuery = [
@@ -322,6 +366,7 @@ export async function buildHealthInsights(
     `Saved AI record-analysis notes: ${findingLines.length ? `\n- ${findingLines.slice(0, 12).join("\n- ")}` : "none"}.`,
     `Upcoming appointments: ${upcoming.length ? upcoming.map((a) => `${a.doctor_name} on ${a.appointment_date}${a.appointment_time ? ` at ${a.appointment_time}` : ""}`).join("; ") : "none"}.`,
     `Past appointments: ${past.length ? past.map((a) => `${a.doctor_name} on ${a.appointment_date}`).join("; ") : "none"}.`,
+    `Historical measurements from saved analyses (use only these values and dates): ${healthTrends.length ? JSON.stringify(healthTrends.map((trend) => ({ key: trend.key, test: trend.test, unit: trend.unit, previous_value: trend.previous?.value ?? null, previous_date: trend.previous?.date ?? null, latest_value: trend.latest?.value ?? null, latest_date: trend.latest?.date ?? null, comparison: trend.observation }))) : "none"}.`,
   ].join("\n\n");
 
   const documentBlock = grounding.used
@@ -334,6 +379,7 @@ STRICT RULES:
 - Use only facts present in the information below. Never invent symptoms, values, medicines, appointments or document content.
 - Do NOT diagnose, do NOT prescribe, do NOT recommend changing, starting or stopping any medication, and do NOT make treatment decisions.
 - Present uncertain observations as observations ("documented", "recorded"), never as confirmed medical facts.
+- For health_trend_observations, use only the supplied trend keys and choose the comparison exactly from its recorded values: increased, decreased, stable only when unchanged, or insufficient when comparison is unavailable. These are observations, not medical conclusions.
 - If a section has no supporting information, return exactly [{"title":"${NOT_ENOUGH}","explanation":"${NOT_ENOUGH}","supporting":[],"module":"timeline"}] for it.
 - document_insights must be supported ONLY by the retrieved reference material, and each item's source must be one of the citation lines given there${grounding.used ? "" : ` (none were retrieved — use "${NO_DOCUMENT_NOTE}")`}.
 
@@ -348,7 +394,8 @@ Return ONLY valid JSON (no markdown fences) matching:
   "record_observations": [{"title": "string", "explanation": "string", "supporting": ["string"], "source": "string|null", "date": "string|null", "module": "records"}],
   "medication_activity": [{"title": "string", "explanation": "string", "supporting": ["string"], "source": "string|null", "date": "string|null", "module": "medicines"}],
   "health_activity": [{"title": "string", "explanation": "string", "supporting": ["string"], "source": "string|null", "date": "string|null", "module": "appointments|timeline"}],
-  "document_insights": [{"title": "string", "explanation": "string", "supporting": ["string"], "source": "string|null", "date": "string|null", "module": "timeline"}]
+  "document_insights": [{"title": "string", "explanation": "string", "supporting": ["string"], "source": "string|null", "date": "string|null", "module": "timeline"}],
+  "health_trend_observations": [{"key": "exact supplied trend key", "observation": "increased|decreased|stable|insufficient"}]
 }`;
 
   let parsed: Record<string, unknown> = {};
@@ -416,12 +463,23 @@ Return ONLY valid JSON (no markdown fences) matching:
     documentInsights = documentFallback;
   }
 
+  const modelTrendObservations = new Map(
+    ai.success ? ai.data.health_trend_observations.map((item) => [item.key, item.observation]) : [],
+  );
+  const trendsWithObservations = healthTrends.map((trend) => {
+    const modelObservation = modelTrendObservations.get(trend.key);
+    // Accept the model's label only when it agrees with the comparison calculated from source values.
+    const observation = modelObservation === trend.observation ? modelObservation : trend.observation;
+    return { ...trend, observation };
+  });
+
   return {
     generated_at: new Date().toISOString(),
     record_observations: section("record_observations", fallbackRecordInsights(d)),
     medication_activity: section("medication_activity", fallbackMedicationInsights(d)),
     health_activity: section("health_activity", fallbackActivityInsights(d)),
     document_insights: documentInsights,
+    health_trends: trendsWithObservations,
     disclaimer: HEALTH_INSIGHTS_DISCLAIMER,
   };
 }
@@ -436,6 +494,10 @@ export function healthInsightsToMarkdown(h: HealthInsights): string {
     sec("Medication Activity", h.medication_activity),
     sec("Health Activity", h.health_activity),
     sec("Document-Supported Insights", h.document_insights),
+    `**Health Trends & Progress**\n${(h.health_trends ?? []).length ? h.health_trends.map((trend) => {
+      const readings = trend.readings.map((reading) => `${reading.date ?? "Date not recorded"}: ${reading.value} (${reading.document_name}, ${reading.section})`).join("; ");
+      return `- **${trend.test}${trend.unit ? ` (${trend.unit})` : ""}** — ${trend.observation}: ${readings}`;
+    }).join("\n") : NOT_ENOUGH}`,
     `_${h.disclaimer}_`,
   ].join("\n\n");
 }

@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Plus, Trash2, Loader2, ExternalLink, Download, Sparkles, Eye, Search } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +37,9 @@ import { RECORD_TYPES, recordIcon, formatDay } from "@/lib/record-utils";
 import type { RecordAnalysisResult } from "@/lib/record-analysis.functions";
 
 export const Route = createFileRoute("/_authenticated/health-records")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    recordId: typeof search.recordId === "string" ? search.recordId : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Health Records — Cure AI" },
@@ -81,6 +84,8 @@ async function openStored(path: string, download = false) {
 
 function RecordsPage() {
   const { user } = useUser();
+  const navigate = useNavigate();
+  const { recordId: linkedRecordId } = Route.useSearch();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -109,6 +114,13 @@ function RecordsPage() {
       return data as HealthRecordRow[];
     },
   });
+
+  useEffect(() => {
+    if (!linkedRecordId || !records) return;
+    const record = records.find((item) => item.id === linkedRecordId);
+    if (record) setDetails(record);
+    void navigate({ to: "/health-records", search: { recordId: undefined }, replace: true });
+  }, [linkedRecordId, navigate, records]);
 
   const { data: analyses } = useQuery({
     queryKey: ["record-analyses"],

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Sparkles, Loader2, FileText, Pill, Activity, BookOpen, RefreshCw } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Sparkles, Loader2, FileText, Pill, Activity, BookOpen, RefreshCw, TrendingUp } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import {
   getLatestHealthInsights,
 } from "@/lib/health-insights.functions";
 import type { InsightItem, HealthInsights } from "@/lib/health-insights.server";
+import type { HealthTrend } from "@/lib/health-trends";
 
 export const Route = createFileRoute("/_authenticated/health-insights")({
   head: () => ({
@@ -67,6 +69,110 @@ function InsightCard({ item }: { item: InsightItem }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function trendObservation(observation: HealthTrend["observation"]) {
+  switch (observation) {
+    case "increased":
+      return "Values increased between the two recorded reports.";
+    case "decreased":
+      return "Values decreased between the two recorded reports.";
+    case "stable":
+      return "Values were unchanged between the two recorded reports.";
+    default:
+      return "Insufficient historical information for comparison.";
+  }
+}
+
+function HealthTrendCard({ trend }: { trend: HealthTrend }) {
+  const chartReadings = trend.readings.filter(
+    (reading): reading is typeof reading & { date: string; numeric_value: number } =>
+      reading.date !== null && reading.numeric_value !== null,
+  );
+  const delta = trend.difference;
+  const formattedDelta = delta === null ? null : `${delta > 0 ? "+" : ""}${delta.toLocaleString()}${trend.unit ? ` ${trend.unit}` : ""}`;
+
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="space-y-4 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="font-semibold">{trend.test}</h3>
+            <p className="text-sm text-muted-foreground">{trend.unit ?? "Unit not recorded"}</p>
+          </div>
+          <Badge variant="secondary">{trend.readings.length} {trend.readings.length === 1 ? "report" : "reports"}</Badge>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-md border p-3">
+            <p className="text-xs text-muted-foreground">Previous recorded value</p>
+            <p className="mt-1 font-medium">{trend.previous ? `${trend.previous.value} · ${trend.previous.date ?? "Date not recorded"}` : "Not available"}</p>
+          </div>
+          <div className="rounded-md border p-3">
+            <p className="text-xs text-muted-foreground">Latest recorded value</p>
+            <p className="mt-1 font-medium">{trend.latest ? `${trend.latest.value} · ${trend.latest.date ?? "Date not recorded"}` : "Not available"}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <span className="text-muted-foreground">{trendObservation(trend.observation)}</span>
+          {formattedDelta !== null && <Badge variant="outline">Difference: {formattedDelta}</Badge>}
+        </div>
+
+        {chartReadings.length >= 2 && (
+          <div aria-label={`${trend.test} historical trend chart`} className="h-44 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartReadings} margin={{ top: 8, right: 12, bottom: 4, left: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { month: "short", year: "2-digit" })} />
+                <YAxis width={48} tick={{ fontSize: 11 }} />
+                <Tooltip labelFormatter={(date) => `Report date: ${date}`} formatter={(value) => [`${value}${trend.unit ? ` ${trend.unit}` : ""}`, trend.test]} />
+                <Line type="monotone" dataKey="numeric_value" name={trend.test} stroke="var(--primary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        <div className="space-y-2 border-t pt-3">
+          <p className="text-xs font-medium text-muted-foreground">Source reports</p>
+          {trend.readings.map((reading, index) => (
+            <div key={`${reading.record_id}-${index}`} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="min-w-0 text-muted-foreground">
+                {reading.document_name} · {reading.section}{reading.page !== null ? ` · Page ${reading.page}` : ""} · {reading.date ?? "Date not recorded"}
+              </span>
+              <Button asChild variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                <Link to="/health-records" search={{ recordId: reading.record_id }}>Open record</Link>
+              </Button>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function HealthTrendsSection({ trends, loading }: { trends: HealthTrend[]; loading: boolean }) {
+  return (
+    <section className="space-y-3" aria-labelledby="health-trends-heading">
+      <div>
+        <h2 id="health-trends-heading" className="flex items-center gap-2 font-display text-xl font-semibold">
+          <TrendingUp className="h-5 w-5 text-primary" /> Health Trends &amp; Progress
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Historical measurements from your saved report analyses, arranged by report date.
+        </p>
+      </div>
+      {loading ? (
+        <Card><CardContent className="p-4 text-sm text-muted-foreground">Loading saved measurements…</CardContent></Card>
+      ) : trends.length ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          {trends.map((trend) => <HealthTrendCard key={trend.key} trend={trend} />)}
+        </div>
+      ) : (
+        <Card><CardContent className="p-4 text-sm text-muted-foreground">No historical measurements are available in your saved health record analyses.</CardContent></Card>
+      )}
+    </section>
   );
 }
 
@@ -171,6 +277,10 @@ function HealthInsightsPage() {
             </Card>
           </>
         )}
+        <HealthTrendsSection
+          trends={insights?.health_trends ?? latest.data?.health_trends ?? []}
+          loading={latest.isLoading}
+        />
       </div>
     </DashboardLayout>
   );

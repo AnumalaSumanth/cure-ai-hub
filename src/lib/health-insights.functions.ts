@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { buildHealthInsights, type HealthInsights } from "./health-insights.server";
+import { buildHealthInsights, loadHealthTrends, type HealthInsights } from "./health-insights.server";
 
 /** Generates fresh insights from the user's own data and stores the result. */
 export const generateHealthInsights = createServerFn({ method: "POST" })
@@ -17,7 +17,7 @@ export const generateHealthInsights = createServerFn({ method: "POST" })
 /** Latest saved insights — shown on page load without any AI call. */
 export const getLatestHealthInsights = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<{ insights: HealthInsights | null; saved_at: string | null }> => {
+  .handler(async ({ context }): Promise<{ insights: HealthInsights | null; saved_at: string | null; health_trends: HealthInsights["health_trends"] }> => {
     const { data, error } = await context.supabase
       .from("health_insights")
       .select("payload, created_at")
@@ -26,7 +26,12 @@ export const getLatestHealthInsights = createServerFn({ method: "GET" })
       .maybeSingle();
     if (error || !data) {
       if (error) console.error("[insights] load failed:", error.message);
-      return { insights: null, saved_at: null };
+      return { insights: null, saved_at: null, health_trends: await loadHealthTrends(context.supabase, context.userId) };
     }
-    return { insights: data.payload as HealthInsights, saved_at: data.created_at };
+    const health_trends = await loadHealthTrends(context.supabase, context.userId);
+    return {
+      insights: { ...(data.payload as HealthInsights), health_trends },
+      saved_at: data.created_at,
+      health_trends,
+    };
   });
