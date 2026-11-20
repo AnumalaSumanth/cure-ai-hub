@@ -218,7 +218,7 @@ function DashboardPage() {
               <Link to="/appointments"><Plus className="h-4 w-4" /> Add appointment</Link>
             </Button>
             <Button asChild variant="outline" className="h-auto justify-start gap-3 py-4">
-              <Link to="/health-records"><Upload className="h-4 w-4" /> Upload record</Link>
+              <Link to="/health-records" search={{ recordId: undefined }}><Upload className="h-4 w-4" /> Upload record</Link>
             </Button>
           </CardContent>
         </Card>

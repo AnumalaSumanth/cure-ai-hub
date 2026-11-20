@@ -17,6 +17,7 @@ export type HealthTrendReading = {
   value: string;
   unit: string | null;
   numeric_value: number | null;
+  secondary_numeric_value: number | null;
   section: string;
   page: number | null;
 };
@@ -29,17 +30,26 @@ export type HealthTrend = {
   previous: HealthTrendReading | null;
   latest: HealthTrendReading | null;
   difference: number | null;
-  observation: "increased" | "decreased" | "stable" | "insufficient";
+  observation: "increased" | "decreased" | "stable" | "changed" | "insufficient";
+  secondary_difference: number | null;
 };
 
-type ParsedMeasurement = { numericValue: number | null; unit: string | null };
+type ParsedMeasurement = { numericValue: number | null; secondaryNumericValue: number | null; unit: string | null };
 
 function parseMeasurement(result: string): ParsedMeasurement {
   const ratio = result.match(/^\s*[-+]?\d+(?:[.,]\d+)?\s*\/\s*[-+]?\d+(?:[.,]\d+)?\s*(.*)$/);
-  if (ratio) return { numericValue: null, unit: parseUnit(ratio[1] ?? "") };
+  if (ratio) {
+    const first = Number((ratio[0] ?? "").split("/")[0]?.trim().replace(",", "."));
+    const second = Number((ratio[0] ?? "").split("/")[1]?.trim().match(/^[-+]?\d+(?:[.,]\d+)?/)?.[0]?.replace(",", "."));
+    return {
+      numericValue: Number.isFinite(first) ? first : null,
+      secondaryNumericValue: Number.isFinite(second) ? second : null,
+      unit: parseUnit(ratio[1] ?? ""),
+    };
+  }
 
   const match = result.match(/^\s*([-+]?\d[\d,]*(?:\.\d+)?)\s*(.*)$/);
-  if (!match) return { numericValue: null, unit: null };
+  if (!match) return { numericValue: null, secondaryNumericValue: null, unit: null };
 
   const rawNumber = match[1] ?? "";
   const normalizedNumber = rawNumber.includes(".")
@@ -48,6 +58,7 @@ function parseMeasurement(result: string): ParsedMeasurement {
   const numericValue = Number(normalizedNumber);
   return {
     numericValue: Number.isFinite(numericValue) ? numericValue : null,
+    secondaryNumericValue: null,
     unit: parseUnit(match[2] ?? ""),
   };
 }
@@ -97,7 +108,8 @@ export function buildHealthTrends(rows: SavedTrendAnalysis[]): HealthTrend[] {
         value: result,
         unit: parsed.unit,
         numeric_value: parsed.numericValue,
-        section: `Important values · ${test}`,
+        secondary_numeric_value: parsed.secondaryNumericValue,
+        section: `Saved analysis · ${test}`,
         page: null,
       });
       groups.set(key, group);
@@ -112,17 +124,30 @@ export function buildHealthTrends(rows: SavedTrendAnalysis[]): HealthTrend[] {
         if (!b.date) return -1;
         return new Date(a.date).getTime() - new Date(b.date).getTime();
       });
-      const datedNumeric = group.unit
-        ? readings.filter((reading) => reading.date && reading.numeric_value !== null)
-        : [];
-      const pair = datedNumeric.slice(-2);
-      const previous = pair.length === 2 ? pair[0] : null;
-      const latest = pair.length === 2 ? pair[1] : null;
-      const difference =
-        previous?.numeric_value !== null && previous?.numeric_value !== undefined &&
-        latest?.numeric_value !== null && latest?.numeric_value !== undefined
-          ? roundDifference(latest.numeric_value - previous.numeric_value)
-          : null;
+      const datedReadings = readings.filter((reading) => reading.date);
+      const previous = datedReadings.length >= 2 ? datedReadings[datedReadings.length - 2] ?? null : null;
+      const latest = datedReadings[datedReadings.length - 1] ?? null;
+      let difference: number | null = null;
+      let secondaryDifference: number | null = null;
+      if (
+        previous && latest && group.unit &&
+        previous.numeric_value !== null && latest.numeric_value !== null
+      ) {
+        difference = roundDifference(latest.numeric_value - previous.numeric_value);
+        if (previous.secondary_numeric_value !== null && latest.secondary_numeric_value !== null) {
+          secondaryDifference = roundDifference(latest.secondary_numeric_value - previous.secondary_numeric_value);
+        }
+      }
+      const observation: HealthTrend["observation"] =
+        difference === null
+          ? "insufficient"
+          : difference === 0 && (secondaryDifference === null || secondaryDifference === 0)
+            ? "stable"
+            : secondaryDifference !== null && difference !== 0 && Math.sign(difference) !== Math.sign(secondaryDifference)
+              ? "changed"
+              : difference > 0 || (secondaryDifference !== null && secondaryDifference > 0)
+                ? "increased"
+                : "decreased";
 
       return {
         key,
@@ -132,7 +157,8 @@ export function buildHealthTrends(rows: SavedTrendAnalysis[]): HealthTrend[] {
         previous,
         latest,
         difference,
-        observation: difference === null ? "insufficient" : difference === 0 ? "stable" : difference > 0 ? "increased" : "decreased",
+        secondary_difference: secondaryDifference,
+        observation,
       };
     })
     .sort((a, b) => a.test.localeCompare(b.test) || (a.unit ?? "").localeCompare(b.unit ?? ""));

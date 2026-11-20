@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/health-insights")({
 });
 
 type Section = {
-  key: keyof Omit<HealthInsights, "generated_at" | "disclaimer">;
+  key: keyof Omit<HealthInsights, "generated_at" | "disclaimer" | "health_trends">;
   title: string;
   icon: typeof FileText;
 };
@@ -80,18 +80,23 @@ function trendObservation(observation: HealthTrend["observation"]) {
       return "Values decreased between the two recorded reports.";
     case "stable":
       return "Values were unchanged between the two recorded reports.";
+    case "changed":
+      return "The two recorded components changed in different directions.";
     default:
       return "Insufficient historical information for comparison.";
   }
 }
 
 function HealthTrendCard({ trend }: { trend: HealthTrend }) {
-  const chartReadings = trend.readings.filter(
+  const chartReadings = trend.unit ? trend.readings.filter(
     (reading): reading is typeof reading & { date: string; numeric_value: number } =>
       reading.date !== null && reading.numeric_value !== null,
-  );
+  ) : [];
   const delta = trend.difference;
-  const formattedDelta = delta === null ? null : `${delta > 0 ? "+" : ""}${delta.toLocaleString()}${trend.unit ? ` ${trend.unit}` : ""}`;
+  const formatDelta = (value: number) => `${value > 0 ? "+" : ""}${value.toLocaleString()}`;
+  const formattedDelta = delta === null
+    ? null
+    : `${formatDelta(delta)}${trend.secondary_difference !== null ? ` / ${formatDelta(trend.secondary_difference)}` : ""}${trend.unit ? ` ${trend.unit}` : ""}`;
 
   return (
     <Card className="shadow-soft">
@@ -127,8 +132,11 @@ function HealthTrendCard({ trend }: { trend: HealthTrend }) {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(date: string) => new Date(`${date}T00:00:00`).toLocaleDateString(undefined, { month: "short", year: "2-digit" })} />
                 <YAxis width={48} tick={{ fontSize: 11 }} />
-                <Tooltip labelFormatter={(date) => `Report date: ${date}`} formatter={(value) => [`${value}${trend.unit ? ` ${trend.unit}` : ""}`, trend.test]} />
+                <Tooltip labelFormatter={(date) => `Report date: ${date}`} formatter={(value, name) => [`${value}${trend.unit ? ` ${trend.unit}` : ""}`, name ?? trend.test]} />
                 <Line type="monotone" dataKey="numeric_value" name={trend.test} stroke="var(--primary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                {chartReadings.some((reading) => reading.secondary_numeric_value !== null) && (
+                  <Line type="monotone" dataKey="secondary_numeric_value" name="Second value" stroke="var(--secondary)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </div>

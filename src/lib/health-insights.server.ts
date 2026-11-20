@@ -415,7 +415,7 @@ Return ONLY valid JSON (no markdown fences) matching:
   }
 
   const ai = AiSchema.safeParse(parsed);
-  const section = (key: keyof z.infer<typeof AiSchema>, fallback: InsightItem[]): InsightItem[] => {
+  const section = (key: keyof Omit<z.infer<typeof AiSchema>, "health_trend_observations">, fallback: InsightItem[]): InsightItem[] => {
     const items = ai.success ? ai.data[key] : [];
     const valid = items.filter(
       (i) =>
